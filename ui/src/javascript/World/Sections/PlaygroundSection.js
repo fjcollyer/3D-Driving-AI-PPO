@@ -21,7 +21,38 @@ export default class PlaygroundSection {
 
         this.setupLighting();
         this.loadRacetrack();
+        //this.addNumberToScene();
     }  
+
+    addNumberToScene() {
+        const numberTexture = this.createNumberTexture();
+    
+        const geometry = new THREE.PlaneBufferGeometry(4, 4);
+        const material = new THREE.MeshBasicMaterial({ map: numberTexture, transparent: true, depthWrite: false });
+        const mesh = new THREE.Mesh(geometry, material);
+        mesh.position.set(-20, 0, 5); // You can adjust this position as needed
+        mesh.rotation.x = Math.PI / 2; // Rotate 90 degrees        
+        this.container.add(mesh);
+    }    
+
+    createNumberTexture() {
+        const canvas = document.createElement('canvas');
+        canvas.width = 256;
+        canvas.height = 256;
+        const context = canvas.getContext('2d');
+    
+        // Style the number
+        context.fillStyle = '#FFFFFF'; // White color
+        context.font = 'bold 128px Arial';
+        context.textAlign = 'center';
+        context.textBaseline = 'middle';
+        context.fillText('10', canvas.width / 2, canvas.height / 2);
+    
+        const texture = new THREE.Texture(canvas);
+        texture.needsUpdate = true;
+    
+        return texture;
+    }
 
     setupLighting() {
         const ambientLight = new THREE.AmbientLight(0xffffff, 5); // white color, very high intensity

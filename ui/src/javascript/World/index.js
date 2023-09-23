@@ -79,7 +79,7 @@ export default class
         this.setTiles()
         this.setWalls()
         this.setSections()
-        this.setEasterEggs()
+        //this.setEasterEggs()
     }
 
     setReveal()

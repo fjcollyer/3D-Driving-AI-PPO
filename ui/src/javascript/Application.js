@@ -39,9 +39,6 @@ export default class Application
         this.setWorld()
         this.setTitle()
         this.setThreejsJourney()
-        this.world.car.chassis.object.position.x = 10
-        this.world.car.chassis.object.position.y = 0
-        this.world.car.chassis.object.position.z = 0
     }
 
     /**
