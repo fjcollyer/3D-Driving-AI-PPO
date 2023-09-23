@@ -129,6 +129,7 @@ import playgroundStaticCollisionSource from '../models/playground/static/collisi
 
 // Racetrack
 import racetrackModel from '../models/racetrack/racetrack.glb'
+import racetrackModelEmpty from '../models/racetrack/racetrackEmpty.glb'
 
 // Brick
 import brickBaseSource from '../models/brick/base.glb'
@@ -218,6 +219,7 @@ export default class Resources extends EventEmitter
 {
     constructor()
     {
+        console.log('Resources constructor')
         super()
 
         this.loader = new Loader()
@@ -350,6 +352,7 @@ export default class Resources extends EventEmitter
 
             // Racetrack
             { name: 'racetrack', source: racetrackModel },
+            { name: 'racetrackEmpty', source: racetrackModelEmpty },
 
             // Brick
             { name: 'brickBase', source: brickBaseSource },

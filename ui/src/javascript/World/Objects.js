@@ -303,10 +303,6 @@ export default class Objects
                 _child.updateMatrix()
             }
         }
-
-        // Create physics object
-        console.log("logging collision children passed into physics from objecs: ");
-        console.log(_options.collision.children);
         
         object.collision = this.physics.addObjectFromThree({
             meshes: [..._options.collision.children],
@@ -316,13 +312,10 @@ export default class Objects
             sleep
         })
 
-        let count = 0
         for(const _child of object.container.children)
         {
-            count++
             _child.position.sub(object.collision.center)
         }
-        console.log("object file logging count of objects that were passed to physics: " + count);
 
         // Sound
         if(_options.soundName)

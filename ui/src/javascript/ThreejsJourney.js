@@ -4,6 +4,7 @@ export default class ThreejsJourney
 {
     constructor(_options)
     {
+        console.log("ThreejsJourney constructor")
         // Options
         this.config = _options.config
         this.time = _options.time

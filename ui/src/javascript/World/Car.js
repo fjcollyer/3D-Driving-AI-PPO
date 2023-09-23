@@ -38,8 +38,8 @@ export default class Car
         this.setBackLights()
         this.setWheels()
         this.setTransformControls()
-        this.setShootingBall()
-        this.setKlaxon()
+        // this.setShootingBall()
+        //this.setKlaxon()
     }
 
     setModels()
@@ -144,7 +144,7 @@ export default class Car
         // this.chassis.object.add(this.antena.bunnyEarLeft)
 
         // this.antena.bunnyEarRight = this.objects.getConvertedMesh(this.models.bunnyEarRight.scene.children)
-        // this.chassis.object.add(this.antena.bunnyEarRight)
+        // this.chassis.object.add(this.antena.bunnyEarRight)hh
 
         this.antena.speed = new THREE.Vector2()
         this.antena.absolutePosition = new THREE.Vector2()

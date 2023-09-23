@@ -1,3 +1,5 @@
+const fjcConfig = require('../fjcConfig')
+
 import CANNON from 'cannon'
 import * as THREE from 'three'
 
@@ -34,7 +36,7 @@ export default class Physics
     setWorld()
     {
         this.world = new CANNON.World()
-        this.world.gravity.set(0, 0, - 3.25)
+        this.world.gravity.set(0, 0, - 1.25)
         this.world.allowSleep = true
         // this.world.gravity.set(0, 0, 0)
         // this.world.broadphase = new CANNON.SAPBroadphase(this.world)
@@ -140,9 +142,9 @@ export default class Physics
         this.car.options.wheelCustomSlidingRotationalSpeed = - 30
         this.car.options.wheelMass = 5
         this.car.options.controlsSteeringSpeed = 0.005
-        this.car.options.controlsSteeringMax = Math.PI * 0.17
+        this.car.options.controlsSteeringMax = Math.PI * 0.07
         this.car.options.controlsSteeringQuad = false
-        this.car.options.controlsAcceleratinMaxSpeed = 0.055
+        this.car.options.controlsAcceleratinMaxSpeed = 0.065
         this.car.options.controlsAcceleratinMaxSpeedBoost = 0.11
         this.car.options.controlsAcceleratingSpeed = 2
         this.car.options.controlsAcceleratingSpeedBoost = 3.5
@@ -170,7 +172,7 @@ export default class Physics
         /**
          * Create method
          */
-        this.car.create = () =>
+        this.car.create = (x, y, z) =>
         {
             /**
              * Chassis
@@ -181,7 +183,14 @@ export default class Physics
 
             this.car.chassis.body = new CANNON.Body({ mass: this.car.options.chassisMass })
             this.car.chassis.body.allowSleep = false
-            this.car.chassis.body.position.set(0, 0, 12)
+
+            // fjc
+            console.log("this.car.create called with x: " + x + " y: " + y + " z: " + z)
+            x = x || 0;
+            y = y || 0;
+            z = z || 40;
+            this.car.chassis.body.position.set(x, y, z)
+
             this.car.chassis.body.sleep()
             this.car.chassis.body.addShape(this.car.chassis.shape, this.car.options.chassisOffset)
             this.car.chassis.body.quaternion.setFromAxisAngle(new CANNON.Vec3(0, 0, 1), - Math.PI * 0.5)
@@ -302,10 +311,11 @@ export default class Physics
         /**
          * Recreate method
          */
-        this.car.recreate = () =>
+        this.car.recreate = (x, y, z) =>
         {
+            console.log("this.car.recreate called with x: " + x + " y: " + y + " z: " + z)
             this.car.destroy()
-            this.car.create()
+            this.car.create(x, y, z)
             this.car.chassis.body.wakeUp()
         }
 
@@ -347,8 +357,14 @@ export default class Physics
         /**
          * Cannon tick
          */
+        // fjc
         this.world.addEventListener('postStep', () =>
         {
+            if (this.car.chassis.body.position.z < fjcConfig.deathPosition[2]) {
+                console.log("Death position reached Z: " + this.car.chassis.body.position.z)
+                this.car.recreate(fjcConfig.carStartingPosition[0], fjcConfig.carStartingPosition[1], fjcConfig.carStartingPosition[2])
+            }
+
             // Update speed
             let positionDelta = new CANNON.Vec3()
             positionDelta = positionDelta.copy(this.car.chassis.body.position)
@@ -587,7 +603,8 @@ export default class Physics
         })
 
         // Create the initial car
-        this.car.create()
+        // fjc
+        this.car.create(fjcConfig.carStartingPosition[0], fjcConfig.carStartingPosition[1], fjcConfig.carStartingPosition[2])
 
         // Debug
         if(this.debug)

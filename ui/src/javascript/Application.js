@@ -13,6 +13,7 @@ import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js'
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js'
 import BlurPass from './Passes/Blur.js'
 import GlowsPass from './Passes/Glows.js'
+import fjcConfig from './fjcConfig.js'
 
 export default class Application
 {
@@ -21,6 +22,7 @@ export default class Application
      */
     constructor(_options)
     {
+        console.log('🚀 Application constructor')
         // Options
         this.$canvas = _options.$canvas
 
@@ -37,16 +39,23 @@ export default class Application
         this.setWorld()
         this.setTitle()
         this.setThreejsJourney()
+        this.world.car.chassis.object.position.x = 10
+        this.world.car.chassis.object.position.y = 0
+        this.world.car.chassis.object.position.z = 0
     }
 
     /**
      * Set config
      */
+    // fjc
     setConfig()
     {
         this.config = {}
-        this.config.debug = window.location.hash === '#debug'
-        this.config.cyberTruck = window.location.hash === '#cybertruck'
+        // this.config.debug = window.location.hash === '#debug'
+        // this.config.cyberTruck = window.location.hash === '#cybertruck'
+        this.config.debug = fjcConfig.debug
+        this.config.cyberTruck = fjcConfig.cyberTruck
+
         this.config.touch = false
 
         window.addEventListener('touchstart', () =>
