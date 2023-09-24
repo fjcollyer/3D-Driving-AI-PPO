@@ -46,9 +46,10 @@ html
     flex-direction: column;
     justify-content: flex-end;
     position: absolute;
-    bottom: 40px;
-    right: 40px;
-    width: 420px;
+    width: 300px;
+    left: calc(100% - 320px);
+    top: calc(0% + 130px);
+    right: 50%;
     -webkit-user-select: none;
     user-select: none;
 }
@@ -60,6 +61,7 @@ html
 
 .threejs-journey .message
 {
+    width: 100%;
     position: absolute;
     bottom: 0;
     right: 0;
@@ -67,8 +69,7 @@ html
     font-weight: 700;
     color: #ffffff;
     font-size: 18px;
-    /* opacity: 0;
-    transform: translateY(120px); */
+    text-shadow: 2px 2px 3px rgba(0, 0, 0, 0.7);
     transition: transform 0.5s cubic-bezier(0.5, 0, 0.25, 1), opacity 0.5s 0.2s cubic-bezier(0.5, 0, 0.25, 1);
 }
 
@@ -80,8 +81,97 @@ html
 .threejs-journey .message .bubble
 {
     position: relative;
+    width: 100%;
     padding: 20px 30px;
     border: 2px solid #ffffff;
     border-radius: 8px;
-    background: linear-gradient(#fdb572ab, #fdb5721a);
+    background: linear-gradient(rgba(166, 166, 166, 0.7), rgba(83, 83, 83, 0.7));
+    border: 3px solid #ffffff;
 }
+
+/* FJC */
+
+.fjc-threejs-journey
+{
+    flex-direction: column;
+    justify-content: flex-end;
+    position: absolute;
+    width: 300px;
+    left: calc(100% - 320px);
+    top: calc(0% + 150px);
+    right: 50%;
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+/* Buttons container */
+.buttons-container {
+    display: flex;
+    width: 100%;
+    justify-content: space-between;
+}
+
+/* Common styles for the buttons */
+.buttons-container button {
+    min-width: 140px;  /* to ensure both buttons have the same width */
+    text-align: center; /* center the text */
+}
+
+.indicator {
+    content: "";
+    position: absolute;
+    top: 41px;
+    left: 74%; /* 74% for Leaderboard, 20% for AI*/
+    width: 0;
+    height: 0;
+    border-left: 10px solid transparent;
+    border-right: 10px solid transparent;
+    border-top: 10px solid white;
+    transition: left 0.3s ease; /* This ensures the smooth transition */
+}
+
+/* AI Configuration Button */
+.ai-config-btn, .leaderboard-toggle {
+    padding: 10px 20px;
+    background: linear-gradient(rgba(166, 166, 166, 0.7), rgba(83, 83, 83, 0.7));
+    border: 3px solid #ffffff;
+    text-shadow: 2px 2px 3px rgba(0, 0, 0, 0.7);
+    border-radius: 8px;
+    font-family: 'Comic Neue', cursive;
+    font-weight: 700;
+    color: #ffffff;
+    cursor: pointer;
+}
+
+/* Leaderboard List and AI menu shared styles */
+.leaderboard-list, .ai-menu {
+    position: absolute;
+    top: 51px;
+    background: linear-gradient(rgba(166, 166, 166, 0.7), rgba(83, 83, 83, 0.7));
+    border: 3px solid #ffffff;
+    text-shadow: 2px 2px 3px rgba(0, 0, 0, 0.7);
+    border-radius: 8px;
+    font-family: 'Comic Neue', cursive;
+    font-weight: 700;
+    color: #ffffff;
+    overflow: hidden;
+    transition: max-height 0.8s cubic-bezier(0.5, 0, 0.25, 1), opacity 0.3s 0.1s;
+    width: 300px;
+}
+
+/* Choose whick one is open to start */
+.leaderboard-list {
+    opacity: 1;
+    max-height: 600px;
+}
+
+.ai-menu {
+    opacity: 0;
+    max-height: 0;
+}
+
+.leaderboard-list li {
+    padding: 10px;
+    border-top: 1px solid white;
+}
+

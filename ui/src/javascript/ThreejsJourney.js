@@ -1,3 +1,5 @@
+const fjcConfig = require('./fjcConfig.js');
+
 import { TweenLite } from 'gsap/TweenLite'
 
 export default class ThreejsJourney
@@ -10,26 +12,33 @@ export default class ThreejsJourney
         this.time = _options.time
         this.world = _options.world
 
-        this.startTime = Date.now();
+        this.startTime = Date.now()
+        this.checkpointsPassed = [];
 
         this.time.on('tick', () =>
         {
 
             if(this.world.physics)
             {
-                this.updateTimer()
+                this.updateTimerAndCheckpoints()
             }
         })
     }
 
-    updateTimer() {
+    updateTimerAndCheckpoints() {
         if (this.startTime) {
-            const elapsedTime = Date.now() - this.startTime; // in milliseconds
+            // Calculate the elapsed time
+            const elapsedTime = Date.now() - this.startTime;
             const seconds = Math.floor((elapsedTime / 1000) % 60);
             const minutes = Math.floor((elapsedTime / (1000 * 60)) % 60);
-    
-            // Update the displayed time
-            document.getElementById("lap-timer").innerText = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+
+            // Calculate the number of checkpoints passeds vs total checkpoints
+            const checkpointCount = this.checkpointsPassed.length;
+            const totalCheckpoints = fjcConfig.numberOfCheckpoints;
+
+            // Update the displayed time and checkpoint count
+            document.getElementById("checkpoint-count").innerText = `Checkpoints: ${checkpointCount}/${totalCheckpoints}`;
+            document.getElementById("lap-timer").innerText = `Time: ${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
         }
     }    
 }

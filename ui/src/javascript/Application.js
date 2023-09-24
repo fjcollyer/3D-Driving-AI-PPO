@@ -127,8 +127,9 @@ export default class Application
         {
             if(this.world && this.world.car)
             {
-                this.camera.target.x = this.world.car.chassis.object.position.x
+                this.camera.target.x = this.world.car.chassis.object.position.x 
                 this.camera.target.y = this.world.car.chassis.object.position.y
+                this.camera.target.z = this.world.car.chassis.object.position.z - 4
             }
         })
     }
