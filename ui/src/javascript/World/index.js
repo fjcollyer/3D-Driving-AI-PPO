@@ -1,5 +1,5 @@
 const fjcConfig = require('../fjcConfig.js');
-import startImg from '../../images/boyShrugging.png';
+import startImg from '../../images/clock.png';
 
 import * as THREE from 'three'
 import Materials from './Materials.js'
