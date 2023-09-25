@@ -6,6 +6,7 @@ export default class Car
 {
     constructor(_options)
     {
+        console.log("Car constructor")
         // Options
         this.time = _options.time
         this.resources = _options.resources
@@ -38,8 +39,6 @@ export default class Car
         this.setBackLights()
         this.setWheels()
         this.setTransformControls()
-        // this.setShootingBall()
-        //this.setKlaxon()
     }
 
     setModels()
@@ -102,6 +101,7 @@ export default class Car
 
     setChassis()
     {
+        console.log("Car setChassis")
         this.chassis = {}
         this.chassis.offset = new THREE.Vector3(0, 0, - 0.28)
         this.chassis.object = this.objects.getConvertedMesh(this.models.chassis.scene.children)

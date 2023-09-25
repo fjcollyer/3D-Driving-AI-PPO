@@ -36,7 +36,7 @@ export default class Physics
     setWorld()
     {
         this.world = new CANNON.World()
-        this.world.gravity.set(0, 0, - 1.25)
+        this.world.gravity.set(0, 0, fjcConfig.gravityZ)
         this.world.allowSleep = true
         // this.world.gravity.set(0, 0, 0)
         // this.world.broadphase = new CANNON.SAPBroadphase(this.world)
@@ -186,9 +186,6 @@ export default class Physics
 
             // fjc
             console.log("this.car.create called with x: " + x + " y: " + y + " z: " + z)
-            x = x || 0;
-            y = y || 0;
-            z = z || 40;
             this.car.chassis.body.position.set(x, y, z)
 
             this.car.chassis.body.sleep()
@@ -314,6 +311,7 @@ export default class Physics
         this.car.recreate = (x, y, z) =>
         {
             console.log("this.car.recreate called with x: " + x + " y: " + y + " z: " + z)
+            
             this.car.destroy()
             this.car.create(x, y, z)
             this.car.chassis.body.wakeUp()
@@ -364,6 +362,7 @@ export default class Physics
                 console.log("Death position reached Z: " + this.car.chassis.body.position.z)
                 this.car.recreate(fjcConfig.carStartingPosition[0], fjcConfig.carStartingPosition[1], fjcConfig.carStartingPosition[2])
             }
+
 
             // Update speed
             let positionDelta = new CANNON.Vec3()
@@ -604,6 +603,13 @@ export default class Physics
 
         // Create the initial car
         // fjc
+        // Set gravity to 0 for first 3 seconds
+        const originalGravity = this.world.gravity.clone();
+        this.world.gravity.set(0, 0, 0);
+        setTimeout(() => {
+            this.world.gravity.set(originalGravity.x, originalGravity.y, originalGravity.z);
+        }, 3500);
+
         this.car.create(fjcConfig.carStartingPosition[0], fjcConfig.carStartingPosition[1], fjcConfig.carStartingPosition[2])
 
         // Debug

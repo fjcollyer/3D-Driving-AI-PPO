@@ -20,6 +20,15 @@ export default class ThreejsJourney
 
             if(this.world.physics)
             {
+
+                // Unhide the HTML elements if they are hidden
+                if (document.querySelector('.fjc-threejs-journey').hasAttribute('hidden')) {
+                    setTimeout(() => {
+                        document.querySelector('.fjc-threejs-journey').removeAttribute('hidden');
+                        document.querySelector('.threejs-journey.js-threejs-journey').removeAttribute('hidden');
+                    } , 300);
+                }
+                
                 this.updateTimerAndCheckpoints()
             }
         })

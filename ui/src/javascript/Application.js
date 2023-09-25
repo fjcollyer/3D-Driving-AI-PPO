@@ -1,3 +1,5 @@
+import fjcConfig from './fjcConfig.js'
+
 import * as THREE from 'three'
 import * as dat from 'dat.gui'
 
@@ -13,7 +15,6 @@ import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js'
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js'
 import BlurPass from './Passes/Blur.js'
 import GlowsPass from './Passes/Glows.js'
-import fjcConfig from './fjcConfig.js'
 
 export default class Application
 {
@@ -37,7 +38,7 @@ export default class Application
         this.setCamera()
         this.setPasses()
         this.setWorld()
-        this.setTitle()
+        //this.setTitle()
         this.setThreejsJourney()
     }
 
@@ -111,8 +112,7 @@ export default class Application
     /**
      * Set camera
      */
-    setCamera()
-    {
+    setCamera() {
         this.camera = new Camera({
             time: this.time,
             sizes: this.sizes,
@@ -120,19 +120,21 @@ export default class Application
             debug: this.debug,
             config: this.config
         })
-
+        this.camera.target.x = fjcConfig.carStartingPosition[0]
+        this.camera.target.y = fjcConfig.carStartingPosition[1]
+        this.camera.target.z = fjcConfig.carStartingPosition[2]
+    
         this.scene.add(this.camera.container)
-
-        this.time.on('tick', () =>
-        {
-            if(this.world && this.world.car)
-            {
-                this.camera.target.x = this.world.car.chassis.object.position.x 
+        
+        this.time.on('tick', () => {
+            if (this.world && this.world.car) {
+                this.camera.target.x = this.world.car.chassis.object.position.x
                 this.camera.target.y = this.world.car.chassis.object.position.y
-                this.camera.target.z = this.world.car.chassis.object.position.z - 4
+                this.camera.target.z = this.world.car.chassis.object.position.z
             }
         })
     }
+    
 
     setPasses()
     {

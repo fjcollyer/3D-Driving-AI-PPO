@@ -3,6 +3,10 @@
     padding: 0;
     margin: 0;
     box-sizing: border-box;
+    /* Weird font here */
+    /* font-family: 'Verdana' */
+    /* font-family: "Helvetica" */
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
 }
 
 body,
@@ -65,7 +69,6 @@ html
     position: absolute;
     bottom: 0;
     right: 0;
-    font-family: 'Comic Neue', cursive;
     font-weight: 700;
     color: #ffffff;
     font-size: 18px;
@@ -137,7 +140,6 @@ html
     border: 3px solid #ffffff;
     text-shadow: 2px 2px 3px rgba(0, 0, 0, 0.7);
     border-radius: 8px;
-    font-family: 'Comic Neue', cursive;
     font-weight: 700;
     color: #ffffff;
     cursor: pointer;
@@ -151,7 +153,6 @@ html
     border: 3px solid #ffffff;
     text-shadow: 2px 2px 3px rgba(0, 0, 0, 0.7);
     border-radius: 8px;
-    font-family: 'Comic Neue', cursive;
     font-weight: 700;
     color: #ffffff;
     overflow: hidden;
