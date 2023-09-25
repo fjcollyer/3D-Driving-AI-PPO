@@ -34,10 +34,6 @@
     <meta name="application-name" content="Bruno Simon">
     <meta name="msapplication-TileColor" content="#da532c">
     <meta name="theme-color" content="#ffffff">
-    
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@700&display=block" rel="stylesheet">
 </head>
 <body>
 
@@ -100,6 +96,8 @@
     </div>
 
     <script>
+const journey = document.querySelector(".threejs-journey");
+const fjc = document.querySelector(".fjc-threejs-journey");
 const leaderboardToggle = document.querySelector(".leaderboard-toggle");
 const aiConfigBtn = document.querySelector(".ai-config-btn");
 const leaderboardList = document.querySelector(".leaderboard-list");
@@ -107,39 +105,108 @@ const aiMenu = document.querySelector(".ai-menu");
 const indicator = document.querySelector(".indicator");
 const maxHeight = '600px';
 
-let isLeaderboardOpen = true;  // set this to true since leaderboard is up by default
+if(window.innerWidth <= 1100) {
+    // Close AI menu
+    aiMenu.style.opacity = '0';
+    aiMenu.style.maxHeight = '0px';
+    isAiMenuOpen = false;
+    
+    // Ensure leaderboard is closed
+    leaderboardList.style.opacity = '0';
+    leaderboardList.style.maxHeight = '0px';
+    isLeaderboardOpen = false;
+
+    // Hide indicator
+    indicator.style.display = 'none';
+
+    // Center the journey and journey fjc for smaller screens
+    journey.style.left = '0';
+    journey.style.right = '0';
+    journey.style.margin = 'auto';
+
+    fjc.style.left = '0';
+    fjc.style.right = '0';
+    fjc.style.margin = 'auto';
+
+} else {
+    // AI menu is open by default
+    aiMenu.style.opacity = '1';
+    aiMenu.style.maxHeight = maxHeight;
+    isAiMenuOpen = true;
+    
+    // Leaderboard is closed by default
+    leaderboardList.style.opacity = '0';
+    leaderboardList.style.maxHeight = '0px';
+    isLeaderboardOpen = false;
+    
+    // Set the indicator to the appropriate position, given the AI menu is open
+    indicator.style.left = '20%';
+}
 let isAnimating = false;
 
 const toggleMenu = (menuToOpen, menuToClose) => {
     if (isAnimating) return; // prevent further clicks while animating
+    if (menuToOpen) {
+        indicator.style.display = 'block';
+    }
     isAnimating = true;
 
-    menuToClose.style.opacity = '0'; 
-    menuToClose.style.maxHeight = '0px';
+    if (menuToClose) {
+        menuToClose.style.opacity = '0'; 
+        menuToClose.style.maxHeight = '0px';
+    }
 
-    setTimeout(() => {
+    if (menuToOpen && !menuToClose) {
         menuToOpen.style.opacity = '1';
         menuToOpen.style.maxHeight = maxHeight;; 
+    } else if (menuToOpen) {
+        setTimeout(() => {
+            menuToOpen.style.opacity = '1';
+            menuToOpen.style.maxHeight = maxHeight;; 
+        }, 100); // Read below
+    }
+
+    setTimeout(() => {
         isAnimating = false;
-    }, 500);  // the timeout duration should be equal to the duration of your transition
+    }, 100);  // the timeout duration should be equal to the duration of your transition in CSS
 };
 
 leaderboardToggle.addEventListener("click", function() {
-    if (!isLeaderboardOpen && !isAnimating) {
+    console.log("leaderboard clicked");
+    if (isAiMenuOpen && !isAnimating) {
         toggleMenu(leaderboardList, aiMenu);
         isLeaderboardOpen = true;
-        leaderboardToggle.classList.add('active');
-        aiConfigBtn.classList.remove('active');
+        isAiMenuOpen = false;
+        indicator.style.left = '74%'; // Move indicator to leaderboard button
+    } else if (isLeaderboardOpen && !isAnimating) {
+        toggleMenu(null, leaderboardList);
+        isLeaderboardOpen = false;
+        isAiMenuOpen = false;
+        indicator.style.display = 'none'; // Hide indicator
+    } else if (!isLeaderboardOpen && !isAiMenuOpen && !isAnimating) {
+        toggleMenu(leaderboardList, null);
+        isLeaderboardOpen = true;
+        isAiMenuOpen = false;
         indicator.style.left = '74%'; // Move indicator to leaderboard button
     }
 });
 
 aiConfigBtn.addEventListener("click", function() {
+    console.log("ai clicked");
     if (isLeaderboardOpen && !isAnimating) {
         toggleMenu(aiMenu, leaderboardList);
         isLeaderboardOpen = false;
-        aiConfigBtn.classList.add('active');
-        leaderboardToggle.classList.remove('active');
+        isAiMenuOpen = true;
+        indicator.style.left = '20%'; // Move indicator to AI button
+    } else if (isAiMenuOpen && !isAnimating) {
+        toggleMenu(null, aiMenu);
+        isLeaderboardOpen = false;
+        isAiMenuOpen = false;
+        indicator.style.display = 'none'; // Hide indicator
+    } else if (!isLeaderboardOpen && !isAiMenuOpen && !isAnimating) {
+        toggleMenu(aiMenu, null);
+        isLeaderboardOpen = false;
+        isAiMenuOpen = true;
         indicator.style.left = '20%'; // Move indicator to AI button
     }
 });

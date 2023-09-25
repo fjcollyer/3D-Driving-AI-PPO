@@ -160,17 +160,6 @@ html
     width: 300px;
 }
 
-/* Choose whick one is open to start */
-.leaderboard-list {
-    opacity: 1;
-    max-height: 600px;
-}
-
-.ai-menu {
-    opacity: 0;
-    max-height: 0;
-}
-
 .leaderboard-list li {
     padding: 10px;
     border-top: 1px solid white;
