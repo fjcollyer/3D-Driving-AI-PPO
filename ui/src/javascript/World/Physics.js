@@ -358,11 +358,8 @@ export default class Physics
         // fjc
         this.world.addEventListener('postStep', () =>
         {
-            if (this.car.chassis.body.position.z < fjcConfig.deathPosition[2]) {
-                console.log("Death position reached Z: " + this.car.chassis.body.position.z)
-                this.car.recreate(fjcConfig.carStartingPosition[0], fjcConfig.carStartingPosition[1], fjcConfig.carStartingPosition[2])
-            }
 
+            //console.log('position of car with 1 decimal, x: ' + this.car.chassis.body.position.x.toFixed(1) + ' y: ' + this.car.chassis.body.position.y.toFixed(1) + ' z: ' + this.car.chassis.body.position.z.toFixed(1))
 
             // Update speed
             let positionDelta = new CANNON.Vec3()

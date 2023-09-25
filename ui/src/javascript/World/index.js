@@ -67,7 +67,7 @@ export default class
         {
             this.camera.pan.enable()
             
-        }, 2000)
+        }, 0)
 
         this.setReveal()
         this.setMaterials()
@@ -179,7 +179,11 @@ export default class
     
         const loaderContainer = document.createElement('div');
         loaderContainer.className = 'loader-container';
-        loaderContainer.innerHTML = `<button id="loader-startButton">0%</button>`;
+    loaderContainer.innerHTML = `
+        <button id="loader-startButton">
+            <div id="loader-background"></div>
+            0%
+        </button>`;
         
         document.body.appendChild(loaderContainer);
         
@@ -197,6 +201,7 @@ export default class
             }
             
             #loader-startButton {
+                transition: transform 0.1s ease-in-out;
                 width: 100%;
                 height: 100%;
                 border: none;
@@ -224,33 +229,29 @@ export default class
                 width: calc(100% + 4px);
                 height: calc(100% + 4px);
                 animation: glowing 20s linear infinite;
-                opacity: 0;
+                opacity: var(--before-opacity, 0);
                 transition: opacity .3s ease-in-out;
                 border-radius: 10px;
             }
-            
+
             #loader-startButton:active {
-                scale: 0.9;
+                transform: scale(0.9);
+            }
+
+            #loader-startButton.loaded:hover {
+                z-index: 1;
             }
             
-            #loader-startButton:active:after {
-                background: transparent;
+            #loader-startButton.loaded:before {
+                opacity: 1; // This will make the outline glow when it's fully loaded.
             }
             
             #loader-startButton:hover:before {
-                opacity: 1;
+                opacity: 1; // This will make the outline glow when it's hovered over.
             }
             
-            #loader-startButton:after {
-                z-index: -1;
-                content: '';
-                position: absolute;
-                width: 100%;
-                height: 100%;
-                background: #111;
-                left: 0;
-                top: 0;
-                border-radius: 10px;
+            #loader-startButton:active:before {
+                opacity: 1; // This will make the outline glow when it's clicked.
             }
             
             @keyframes glowing {
@@ -271,11 +272,16 @@ export default class
         // Handling the loading progress
         this.resources.on('progress', (_progress) => {
             _progress = Math.floor(_progress * 100);
-            document.querySelector('#loader-startButton').textContent = _progress >= 100 ? `START` : `${_progress}%`;
+            const button = document.querySelector('#loader-startButton');
+            button.textContent = _progress >= 100 ? `START` : `${_progress}%`;
             progress = _progress;
+            if (_progress >= 100) {
+                button.classList.add('loaded');
+            }
         });
-        
-        document.getElementById('loader-startButton').addEventListener('click', () => {
+
+        const startButton = document.getElementById('loader-startButton');        
+        startButton.addEventListener('click', () => {
             if (progress < 100) {
                 console.log('Not loaded yet');
                 return;
@@ -447,6 +453,7 @@ export default class
         // Generic options
         const options = {
             config: this.config,
+            physics: this.physics,
             time: this.time,
             resources: this.resources,
             camera: this.camera,

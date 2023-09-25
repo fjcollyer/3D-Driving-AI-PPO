@@ -29,7 +29,7 @@ export default class ThreejsJourney
                     } , 300);
                 }
                 
-                this.updateTimerAndCheckpoints()
+                //this.updateTimerAndCheckpoints()
             }
         })
     }

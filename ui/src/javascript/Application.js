@@ -39,7 +39,7 @@ export default class Application
         this.setPasses()
         this.setWorld()
         //this.setTitle()
-        this.setThreejsJourney()
+        //this.setThreejsJourney() // The HTML this set up is now set up in PlaygroundSection.js
     }
 
     /**
