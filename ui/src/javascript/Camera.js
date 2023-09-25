@@ -125,7 +125,7 @@ export default class Camera
         document.addEventListener('mousewheel', (_event) =>
         {
             this.zoom.targetValue += _event.deltaY * 0.001
-            this.zoom.targetValue = Math.min(Math.max(this.zoom.targetValue, 0), 1)
+            this.zoom.targetValue = Math.min(Math.max(this.zoom.targetValue, -3), 30)
         }, { passive: true })
 
         // Touch
