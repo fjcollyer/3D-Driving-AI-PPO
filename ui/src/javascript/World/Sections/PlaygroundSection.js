@@ -22,7 +22,7 @@ export default class PlaygroundSection {
         // AI logic
         this.aiModeActive = true;
         this.ai = new AI();
-        this.callFrequency = 10 // Every 10 ticks (ticks are 60 times per second)
+        this.callFrequency = 60 * 1 // ticks are 60 times per second
         this.tickCount = 0;
 
         // Game logic setup
