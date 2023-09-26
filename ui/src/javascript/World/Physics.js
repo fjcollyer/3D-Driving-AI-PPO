@@ -108,6 +108,9 @@ export default class Physics
     {
         this.car = {}
 
+        this.car.directionTheta = null;
+        this.car.directionPhi = null;
+
         this.car.steering = 0
         this.car.accelerating = 0
         this.car.speed = 0
@@ -368,6 +371,28 @@ export default class Physics
 
             this.car.oldPosition.copy(this.car.chassis.body.position)
             this.car.speed = positionDelta.length()
+
+            // Calculate azimuthal and polar angles
+            let x = positionDelta.x;
+            let y = positionDelta.y;
+            let z = positionDelta.z;
+            let magnitude = positionDelta.length();
+
+            if (magnitude !== 0) {
+                let theta = Math.atan2(y, x) * (180 / Math.PI); // Azimuthal angle (in xy-plane)
+                
+                // Polar angle, measured from the positive z-axis
+                let phi = Math.acos(z / magnitude) * (180 / Math.PI);
+                
+                // Normalize theta to [0, 360) degrees
+                if(theta < 0) theta += 360;
+                
+                this.car.directionTheta = theta; // Rotation in xy-plane
+                this.car.directionPhi = phi; // Inclination from z-axis
+            } else {
+                this.car.directionTheta = null;
+                this.car.directionPhi = null;
+            }
 
             // Update forward
             const localForward = new CANNON.Vec3(1, 0, 0)

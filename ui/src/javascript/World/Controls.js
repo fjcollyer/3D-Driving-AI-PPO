@@ -123,9 +123,9 @@ export default class Controls extends EventEmitter
                     this.actions.boost = false
                     break
 
-                case 'r':
-                    this.trigger('action', ['reset'])
-                    break
+                // case 'r':
+                //     this.trigger('action', ['reset'])
+                //     break
             }
         }
 

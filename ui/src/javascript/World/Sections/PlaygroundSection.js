@@ -22,7 +22,10 @@ export default class PlaygroundSection {
         // AI logic
         this.aiModeActive = true;
         this.ai = new AI();
-        this.callFrequency = 60 * 1 // ticks are 60 times per second
+        this.batchSize = 64;
+        this.previousState = {};
+        this.previousAiDecision = {};
+        this.callFrequency = 60 // ticks are 60 times per second
         this.tickCount = 0;
 
         // Game logic setup
@@ -42,26 +45,80 @@ export default class PlaygroundSection {
     }  
 
     getState() {
-        const state = {
-            test: "test"
-        };
+        const previousState = this.previousState;
+        const state = {};
+
+        // Position of the car
+        state.carPositionX = this.physics.car.chassis.body.position.x;
+        state.carPositionY = this.physics.car.chassis.body.position.y;
+        state.carPositionZ = this.physics.car.chassis.body.position.z;
+
+        // Direction of the cars movement
+        state.carDirectionTheta = this.physics.car.directionTheta
+        state.carDirectionPhi = this.physics.car.directionPhi
+
+        // Speed of the car
+        state.carSpeed = this.physics.car.speed;
+
+        // Time taken so far
+        state.currentTimeTaken = Date.now() - this.gameStartTime;
+
+        // Number of checkpoints passed
+        state.numCheckpointsPassed = this.numCheckpointsPassed;
+
         return state;
     }
 
     setTickFunction() {
         this.time.on('tick', () => {
             this.tickCount += 1;
+
+            // Automatically move forwards untill the game starts
+            if (!this.gameInProgress && !this.hasWon) {
+                    this.physics.controls.actions.up = true;
+                    // Set other actions are false by default
+                    this.physics.controls.actions.down = false;
+                    this.physics.controls.actions.left = false;
+                    this.physics.controls.actions.right = false;
+                    this.physics.controls.actions.brake = false;
+                    this.physics.controls.actions.boost = false;
+                }
+
             // AI logic
-            if (this.aiModeActive && this.tickCount % this.callFrequency === 0) {
+            if (this.gameInProgress && this.aiModeActive && this.tickCount % this.callFrequency === 0) {
                 this.tickCount = 1;
-                const state = this.getState();
-                const decision = this.ai.returnRandomDecision(state);
-                this.physics.controls.actions.up = decision.up;
-                this.physics.controls.actions.right = decision.right;
-                this.physics.controls.actions.down = decision.down;
-                this.physics.controls.actions.left = decision.left;
-                this.physics.controls.actions.brake = decision.brake;
-                this.physics.controls.actions.boost = decision.boost;
+
+                const currentState = this.getState();
+                const currentDecision = this.ai.chooseAction(Object.values(currentState));
+                
+                // Applying decision to the controls
+                Object.keys(currentDecision).forEach(action => {
+                    this.physics.controls.actions[action] = currentDecision[action];
+                });
+
+                // Calculate reward
+                let reward = 0;
+                // If we are below the death position
+                if (currentState.carPositionZ <= (fjcConfig.deathPositionZ)) {
+                    reward = -1;
+                    console.log("AI Game Over! You fell off the track!");
+                    this.resetGameLogic();
+                    this.setupHTML();
+                    this.physics.car.recreate(fjcConfig.carStartingPosition[0], fjcConfig.carStartingPosition[1], fjcConfig.carStartingPosition[2]);
+
+                }
+                if (Object.keys(this.previousState).length > 0 && currentState.numCheckpointsPassed > this.previousState.numCheckpointsPassed) {
+                    reward = 1;
+                }
+
+                // Train the AI if previousState exists
+                if (Object.keys(this.previousState).length > 0) {
+                    this.ai.remember(Object.values(this.previousState), Object.values(this.previousAiDecision), reward, Object.values(currentState));
+                    this.ai.train(this.batchSize);
+                }
+
+                this.previousState = currentState;
+                this.previousAiDecision = currentDecision;
             }
 
             // Update HTML elements
@@ -78,8 +135,8 @@ export default class PlaygroundSection {
             let carPositionZ = this.areas.car.position.z;
             const startAndFinishLine = fjcConfig.startAndFinnishLine;
 
-            // Check death position condition
-            if (carPositionZ <= fjcConfig.deathPositionZ) {
+            // Check death position condition when not in AI mode
+            if (!this.aiModeActive && carPositionZ <= fjcConfig.deathPositionZ) {
                 console.log("Game Over! You fell off the track!");
                 
                 this.resetGameLogic();
@@ -95,6 +152,7 @@ export default class PlaygroundSection {
                     carPositionZ >= startAndFinishLine.z[0] && carPositionZ <= startAndFinishLine.z[1]) {
                     
                     console.log("Game Started!");
+                    console.log(this.physics)
                     this.gameInProgress = true;
                     this.numCheckpointsPassed = 0;
                     this.gameStartTime = Date.now();
@@ -108,6 +166,7 @@ export default class PlaygroundSection {
                 if (carPositionX >= nextCheckpoint.x[0] && carPositionX <= nextCheckpoint.x[1] &&
                     carPositionY >= nextCheckpoint.y[0] && carPositionY <= nextCheckpoint.y[1] &&
                     carPositionZ >= nextCheckpoint.z[0] && carPositionZ <= nextCheckpoint.z[1]) {
+
                     this.numCheckpointsPassed += 1;
                     console.log("Passed Checkpoint: ", this.numCheckpointsPassed);
                 }
