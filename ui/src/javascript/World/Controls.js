@@ -85,10 +85,6 @@ export default class Controls extends EventEmitter
                 case 'Shift':
                     this.actions.boost = true
                     break
-
-                // case ' ':
-                //     this.jump(true)
-                //     break
             }
         }
 

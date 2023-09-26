@@ -1,4 +1,5 @@
 const fjcConfig = require('../../fjcConfig.js');
+import AI from './ai/ai.js';
 
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
@@ -18,10 +19,14 @@ export default class PlaygroundSection {
         this.x = _options.x;
         this.y = _options.y;
 
+        // AI logic
+        this.aiModeActive = true;
+        this.ai = new AI();
+        this.callFrequency = 10 // Every 10 ticks (ticks are 60 times per second)
+        this.tickCount = 0;
+
         // Game logic setup
-        this.gameStarted = false;
-        this.numCheckpointsPassed = 0;
-        this.gameStartTime = null;
+        this.resetGameLogic();
 
         // Set up HTML elements
         this.setupHTML();
@@ -31,25 +36,36 @@ export default class PlaygroundSection {
         this.container.matrixAutoUpdate = false;
         this.setupLighting();
         this.loadRacetrack();
-        //this.addCheckpoints();
+        this.addCheckpoints();
         this.addStartAndFinishLine();
         this.setTickFunction();
     }  
 
-    setupHTML() {
-        document.querySelector('.fjc-threejs-journey').removeAttribute('hidden');
-        document.querySelector('.threejs-journey.js-threejs-journey').removeAttribute('hidden');
-
-        // Set the default values for the timer and checkpoint count
-        document.getElementById("checkpoint-count").innerText = `Checkpoints: 0/${fjcConfig.numberOfCheckpoints}`;
-        document.getElementById("lap-timer").innerText = `Time: 00:00`;
-
+    getState() {
+        const state = {
+            test: "test"
+        };
+        return state;
     }
 
     setTickFunction() {
         this.time.on('tick', () => {
+            this.tickCount += 1;
+            // AI logic
+            if (this.aiModeActive && this.tickCount % this.callFrequency === 0) {
+                this.tickCount = 1;
+                const state = this.getState();
+                const decision = this.ai.returnRandomDecision(state);
+                this.physics.controls.actions.up = decision.up;
+                this.physics.controls.actions.right = decision.right;
+                this.physics.controls.actions.down = decision.down;
+                this.physics.controls.actions.left = decision.left;
+                this.physics.controls.actions.brake = decision.brake;
+                this.physics.controls.actions.boost = decision.boost;
+            }
+
             // Update HTML elements
-            if (this.gameStarted) {
+            if (this.gameInProgress) {
                 document.getElementById("checkpoint-count").innerText = `Checkpoints: ${this.numCheckpointsPassed}/${fjcConfig.numberOfCheckpoints}`;
                 let elapsedTime = Date.now() - this.gameStartTime;
                 let seconds = Math.floor((elapsedTime / 1000) % 60);
@@ -60,51 +76,83 @@ export default class PlaygroundSection {
             let carPositionX = this.areas.car.position.x;
             let carPositionY = this.areas.car.position.y;
             let carPositionZ = this.areas.car.position.z;
+            const startAndFinishLine = fjcConfig.startAndFinnishLine;
 
             // Check death position condition
             if (carPositionZ <= fjcConfig.deathPositionZ) {
                 console.log("Game Over! You fell off the track!");
-                this.gameStarted = false;
-                this.numCheckpointsPassed = 0;
-                this.gameStartTime = null;
-
+                
+                this.resetGameLogic();
                 this.setupHTML();
                 this.physics.car.recreate(fjcConfig.carStartingPosition[0], fjcConfig.carStartingPosition[1], fjcConfig.carStartingPosition[2]);
             }
 
     
-            if (!this.gameStarted) {
-                // In most efficient way possible check if we are inside the startAndFinishLine
-                const startAndFinishLine = fjcConfig.startAndFinnishLine;
+            // Game not in progress and not won
+            if (!this.gameInProgress && !this.hasWon) {
                 if (carPositionX >= startAndFinishLine.x[0] && carPositionX <= startAndFinishLine.x[1] &&
                     carPositionY >= startAndFinishLine.y[0] && carPositionY <= startAndFinishLine.y[1] &&
                     carPositionZ >= startAndFinishLine.z[0] && carPositionZ <= startAndFinishLine.z[1]) {
-                    this.gameStarted = true;
-                    this.numCheckpointsPassed = 0;
+                    
                     console.log("Game Started!");
+                    this.gameInProgress = true;
+                    this.numCheckpointsPassed = 0;
                     this.gameStartTime = Date.now();
                 }
             }
 
-            if (this.gameStarted) {
-                // In most efficient way possible check if we are inside the next checkpoint
+            // Game in progress and we have not passed all checkpoints
+            if (this.gameInProgress && !this.hasWon && this.numCheckpointsPassed < fjcConfig.numberOfCheckpoints) {
+                // Check if we are inside the next checkpoint
                 const nextCheckpoint = fjcConfig.checkpoints[this.numCheckpointsPassed];
-
                 if (carPositionX >= nextCheckpoint.x[0] && carPositionX <= nextCheckpoint.x[1] &&
                     carPositionY >= nextCheckpoint.y[0] && carPositionY <= nextCheckpoint.y[1] &&
                     carPositionZ >= nextCheckpoint.z[0] && carPositionZ <= nextCheckpoint.z[1]) {
                     this.numCheckpointsPassed += 1;
                     console.log("Passed Checkpoint: ", this.numCheckpointsPassed);
                 }
-    
-                // If all checkpoints have been passed, the game finishes
-                if (this.numCheckpointsPassed >= fjcConfig.numberOfCheckpoints) {
-                    this.gameStarted = false;
-                    console.log("Game Finished!");
-                }
             }
+
+            // Game in progress and have passed all checkpoints except the finnish line
+            if (this.gameInProgress &&  !this.hasWon && this.numCheckpointsPassed >= fjcConfig.numberOfCheckpoints) {
+                if (carPositionX >= startAndFinishLine.x[0] && carPositionX <= startAndFinishLine.x[1] &&
+                    carPositionY >= startAndFinishLine.y[0] && carPositionY <= startAndFinishLine.y[1] &&
+                    carPositionZ >= startAndFinishLine.z[0] && carPositionZ <= startAndFinishLine.z[1]) {
+                    
+                    // Win logic
+                    console.log("You Won!");
+                    this.hasWon = true;
+                    this.winTime = Date.now() - this.gameStartTime;
+                    console.log("Win Time: ", this.winTime);
+
+                    // For now just reset the game
+                    console.log("Resetting Game");
+                    this.resetGameLogic();
+                    this.setupHTML();
+                    this.physics.car.recreate(fjcConfig.carStartingPosition[0], fjcConfig.carStartingPosition[1], fjcConfig.carStartingPosition[2]);
+                    }
+                }
         });
     }    
+
+    resetGameLogic() {
+        this.gameInProgress = false;
+        this.numCheckpointsPassed = 0;
+        this.gameStartTime = null;
+
+        this.hasWon = false;
+        this.winTime = null;
+    }
+
+    setupHTML() {
+        document.querySelector('.fjc-threejs-journey').removeAttribute('hidden');
+        document.querySelector('.threejs-journey.js-threejs-journey').removeAttribute('hidden');
+
+        // Set the default values for the timer and checkpoint count
+        document.getElementById("checkpoint-count").innerText = `Checkpoints: 0/${fjcConfig.numberOfCheckpoints}`;
+        document.getElementById("lap-timer").innerText = `Time: 00:00`;
+
+    }
 
     addStartAndFinishLine() {
         const startAndFinnishLine = fjcConfig.startAndFinnishLine;
