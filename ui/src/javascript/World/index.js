@@ -452,6 +452,7 @@ export default class
 
         // Generic options
         const options = {
+            renderer: this.renderer,
             config: this.config,
             physics: this.physics,
             time: this.time,

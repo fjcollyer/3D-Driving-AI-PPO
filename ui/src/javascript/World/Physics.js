@@ -177,6 +177,11 @@ export default class Physics
          */
         this.car.create = (x, y, z) =>
         {
+            // this.world.gravity.set(0, 0, 0)
+            // setTimeout(() => {
+            //     this.world.gravity.set(0, 0, fjcConfig.gravityZ)
+            // }
+            // , 2000);
             /**
              * Chassis
              */
