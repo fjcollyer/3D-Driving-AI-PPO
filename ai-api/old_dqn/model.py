@@ -15,15 +15,17 @@ from queue import Queue
 logging.basicConfig(level=logging.INFO)
 
 class ImprovedRLModel:
-    def __init__(self, state_size, action_size, learning_rate=0.001, memory_size=10000):
+    def __init__(self, state_size, action_size, learning_rate=0.01, memory_size=10000, batch_size=128):
         self.state_size = state_size
         self.action_size = action_size
         self.action_combinations = [list(i) for i in itertools.product([0, 1], repeat=action_size)]
-        self.memory = Queue(maxsize=memory_size)
+        self.memory = deque(maxlen=memory_size)
+        self.batch_size = batch_size
         self.gamma = 0.95
         self.epsilon = 1.0
-        self.epsilon_min = 0.01
-        self.epsilon_decay = 0.995
+        self.epsilon_min = 0.025
+        self.epsilon_decay = 0.998
+        self.reset_epsilon_frequency = 200
         self.model = self._build_model(learning_rate)
         self.training_thread = None
         self.running = Event()
@@ -53,23 +55,28 @@ class ImprovedRLModel:
         q_values = self.model.predict(state)[0]
         return self.action_combinations[np.argmax(q_values)]
 
-    def _train_async(self, batch_size=32):
-        step = 0  # Define a step variable
+    def _train_async(self):
+        step = 0
         while self.running.is_set():
-            if self.memory.qsize() < batch_size:
+            if len(self.memory) < self.batch_size:
                 continue
-            batch = [self.memory.get() for _ in range(batch_size)]
+            batch = random.sample(self.memory, self.batch_size)
             self._train_on_batch(batch, step)
-            step += 1  # Increment the step variable for every batch processed.
+            step += 1
+            if step % self.reset_epsilon_frequency == 0:
+                self.epsilon = 1.0
 
     def _train_on_batch(self, batch, step):
-        loss_accumulator = efr_accumulator = epsilon_accumulator = 0.0
+        loss_accumulator = efr_accumulator = epsilon_accumulator = reward_accumulator = 0.0
         training_steps = len(batch)
 
         writer = tf.summary.create_file_writer(self.tensorboard_callback.log_dir)
 
         for state, action, reward, next_state, done in batch:
+            
+            reward_accumulator += reward
             target = reward
+
             if not done:
                 target += self.gamma * np.max(self.model.predict(next_state)[0])
 
@@ -86,12 +93,13 @@ class ImprovedRLModel:
             tf.summary.scalar('session_avg_loss', loss_accumulator / training_steps, step=step)
             tf.summary.scalar('session_avg_expected_future_reward', efr_accumulator / training_steps, step=step)
             tf.summary.scalar('session_avg_epsilon', epsilon_accumulator / training_steps, step=step)
+            tf.summary.scalar('session_avg_reward', reward_accumulator / training_steps, step=step)
         
         writer.flush()
         logging.info(f"Session Avg Loss: {loss_accumulator / training_steps}, Avg EFR: {efr_accumulator / training_steps}, Avg Epsilon: {epsilon_accumulator / training_steps}")
 
     def remember(self, state, action, reward, next_state, done):
-        self.memory.put((state, action, reward, next_state, done))
+      self.memory.append((state, action, reward, next_state, done))
 
     def start_training(self):
         self.training_thread = Thread(target=self._train_async)
