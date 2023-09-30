@@ -46,9 +46,9 @@ export default class PlaygroundSection {
         this.tickCount = 0;
 
         // AI config
-        this.aiModeActive = true;
+        this.aiModeActive = false;
         this.callFrequency = 60 / 4 // Example: setting this to 60 will call the AI once per second
-        this.toleranceDistanceRays = 0.4;
+        this.toleranceDistanceRays = 0.8;
         this.stateSpace = 8;
         this.actionSpace = 4;
         // AI Reward values
@@ -198,13 +198,14 @@ export default class PlaygroundSection {
         })
         .then(response => response.json())
         .then(data => {
+            console.log("Up %: " + data.upPercent + " Right %: " + data.rightPercent + " Left %: " + data.leftPercent + " Boost %: " + data.boostPercent);
             // Make the decision
             this.physics.controls.actions.up = data.up;
             this.physics.controls.actions.right = data.right;
             //this.physics.controls.actions.down = data.down;
             this.physics.controls.actions.left = data.left;
             //this.physics.controls.actions.brake = data.brake;
-            //this.physics.controls.actions.boost = data.boost;
+            this.physics.controls.actions.boost = data.boost;
             //console.log("Up: ", data.up, " Right: ", data.right, " Down: ", data.down, " Left: ", data.left, " Brake: ", data.brake, " Boost: ", data.boost);
 
             // Update the state variables
@@ -231,7 +232,7 @@ export default class PlaygroundSection {
         // Check for death
         //if (this.physics.car.chassis.body.position.z <= fjcConfig.deathPositionZ) {
         // if any of the rays are too short, the car has fallen off the track
-        if (Object.values(this.rayLinesLengths).some(length => length <= 0.1)) {
+        if (Object.values(this.rayLinesLengths).some(length => length <= this.toleranceDistanceRays)) {
             this.makeAiDecision(this.previousState, currentState, this.previousAiDecision, this.rewardDeath, true);
             this.resetGame();
             return;

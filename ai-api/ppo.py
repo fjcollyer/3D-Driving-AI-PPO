@@ -68,6 +68,7 @@ class EnhancedPPOAgent:
             advantages, returns = self._calculate_advantages_and_returns(rewards, next_states, dones)
             advantages = (advantages - advantages.mean()) / (advantages.std() + 1e-10)
             
+            # Ensuring proper saving intervals
             with tf.GradientTape() as tape:
                 probabilities = self.model(states)
                 # The loss calculation needs to be adjusted for multi-dimensional action space
@@ -77,6 +78,9 @@ class EnhancedPPOAgent:
 
             gradients = tape.gradient(loss, self.model.trainable_variables)
             self.optimizer.apply_gradients(zip(gradients, self.model.trainable_variables))
+            
+            if self.optimizer.iterations % 100 == 0:  # Save every 100 iterations (adjust as needed)
+                self.model.save_weights(self.model_path, save_format='tf')
             
             self.model.save_weights(self.model_path, save_format='tf')
             with self.summary_writer.as_default():
@@ -90,9 +94,10 @@ class EnhancedPPOAgent:
         running_advantage = 0
         running_return = 0
         for t in reversed(range(len(rewards))):
-            running_return = rewards[t] + self.gamma * running_return * (1 - dones[t])
-            delta = rewards[t] + self.gamma * running_return * (1 - dones[t]) - running_return
+            next_state_pred = self.model.predict(next_states[t].reshape(1, -1))[0]
+            delta = rewards[t] + self.gamma * next_state_pred * (1 - dones[t]) - next_state_pred
             running_advantage = delta + self.gamma * self.lamda * running_advantage * (1 - dones[t])
+            running_return = rewards[t] + self.gamma * running_return * (1 - dones[t])
             advantages[t] = running_advantage
             returns[t] = running_return
         return advantages, returns
@@ -110,6 +115,10 @@ def get_action():
             'right': bool(action[1]),
             'left': bool(action[2]),
             'boost': bool(action[3]),
+            'upPercent': float(action[0]),
+            'rightPercent': float(action[1]),
+            'leftPercent': float(action[2]),
+            'boostPercent': float(action[3])
         }
         experience = Experience(state, action, data['reward'], np.array(data['previousState'], dtype=np.float32), data['gameOver'])
         agent.store_experience(experience)
