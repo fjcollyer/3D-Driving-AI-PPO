@@ -46,19 +46,13 @@ export default class PlaygroundSection {
         this.tickCount = 0;
 
         // AI config
-        this.aiModeActive = false;
+        this.aiModeActive = true;
         this.callFrequency = 60 / 4 // Example: setting this to 60 will call the AI once per second
         this.toleranceDistanceRays = 0.8;
-        this.stateSpace = 8;
-        this.actionSpace = 4;
-        // AI Reward values
-        this.rewardDeath = -10;
-        this.rewardWin = 10;
-        this.rewardStagnaion = -1;
-        this.relativeRewardMax = 1;
-        // AI state variables
-        this.previousState = null;
-        this.previousAiDecision = null;
+        this.stateSpace = 7;
+        this.actionList = ["right", "left"]
+        this.actionSpace = this.actionList.length;
+        this.gamePaused = false;
 
         this.racetrackRaysModel = null;
 
@@ -105,19 +99,7 @@ export default class PlaygroundSection {
         // Reset the car position
         this.physics.car.recreate(fjcConfig.carStartingPosition[0], fjcConfig.carStartingPosition[1], fjcConfig.carStartingPosition[2]);
     }
-
-    resetAi() {
-        this.previousState = this.getState();
-        this.previousAiDecision = {
-            up: false,
-            right: false,
-            //down: false,
-            left: false,
-            //brake: false,
-            boost: false
-        };
-    }
-
+    
     getState() {
         let state = {};
 
@@ -127,15 +109,15 @@ export default class PlaygroundSection {
         // Speed of the car
         state.carSpeed = this.physics.car.speed;
 
-        // Angle of the car in x-y plane (direction car is pointing)
-        state.carAngle = this.physics.car.angle;
-
         // Ray lengths
         state.rayLengthLeft = this.rayLinesLengths.left;
         state.rayLengthRight = this.rayLinesLengths.right;
         state.rayLengthForward = this.rayLinesLengths.forward;
         state.rayLengthForwardLeft = this.rayLinesLengths.forwardLeft;
         state.rayLengthForwardRight = this.rayLinesLengths.forwardRight;
+
+        // Angle of the car in x-y plane (direction car is pointing)
+        // state.carAngle = this.physics.car.angle;
 
         // Direction of the cars movement - not needed/used
         // state.carDirectionTheta = this.physics.car.directionTheta
@@ -158,73 +140,64 @@ export default class PlaygroundSection {
     *  3. Make the decision
     *  4. Update the state variables
     */
-    makeAiDecision(previousState, currentState, previousAiDecision, reward, game_over) {
+    makeAiDecision(currentState, gameOver, win) {
         const dataToSend = {
-            currentState: Object.values(currentState),
-            previousState: Object.values(previousState),
-            previousAiDecision: Object.values(previousAiDecision),
-            reward: reward,
-            gameOver: game_over
+            observation: currentState,
+            done: gameOver,
+            win: win
         };
-        // Verify the data is correct, each array should have the correct amount of elements
-        if (dataToSend.currentState.length != this.stateSpace) {
-            console.error("Error in makeAiDecision: currentState array has incorrect number of elements. Data sent: ", dataToSend);
-            return;
-        }
-        if (dataToSend.previousState.length != this.stateSpace) {
-            console.error("Error in makeAiDecision: previousState array has incorrect number of elements. Data sent: ", dataToSend);
-            return;
-        }
-        if (dataToSend.previousAiDecision.length != this.actionSpace) {
-            console.error("Error in makeAiDecision: previousAiDecision array has incorrect number of elements. Data sent: ", dataToSend);
-            return;
-        }
-        if (reward < this.rewardDeath || reward > this.rewardWin) {
-            console.error("Error in makeAiDecision: reward is not between the acceptable range. Data sent: ", dataToSend);
-            return;
-        }
-        if (typeof game_over != "boolean") {
-            console.error("Error in makeAiDecision: game_over is not a boolean. Data sent: ", dataToSend);
-            return;
-        }
 
-        console.log("Data sent to AI: ", dataToSend);
-        fetch('http://localhost:5001/get_action', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(dataToSend)
+       fetch('http://localhost:5001/get_action', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(dataToSend)
         })
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                // I want the status and the text in the responese from the flask api
+                // return jsonify({"error": "Model is not ready to train"}), 503 # Service Unavailable
+                throw new Error(`HTTP error from /get_action: ${response.status} ${response.statusText}`);
+
+            }
+            return response.json();
+        })
         .then(data => {
-            console.log("Up %: " + data.upPercent + " Right %: " + data.rightPercent + " Left %: " + data.leftPercent + " Boost %: " + data.boostPercent);
-            // Make the decision
-            this.physics.controls.actions.up = data.up;
-            this.physics.controls.actions.right = data.right;
-            //this.physics.controls.actions.down = data.down;
-            this.physics.controls.actions.left = data.left;
-            //this.physics.controls.actions.brake = data.brake;
-            this.physics.controls.actions.boost = data.boost;
-            //console.log("Up: ", data.up, " Right: ", data.right, " Down: ", data.down, " Left: ", data.left, " Brake: ", data.brake, " Boost: ", data.boost);
-
-            // Update the state variables
-            this.previousState = currentState;
-            this.previousAiDecision = data;
+            if (data.should_train) {
+                console.log("Training started, pausing game. Data from get_action: ", data);
+                // Pause the game and start training.
+                this.gamePaused = true;
+                fetch('http://localhost:5001/start_training', {method: 'POST'})
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error(`HTTP error from /start_training: ${response.status} ${response.statusText}`);
+                        }
+                        // Resume game after training is complete.
+                        this.gamePaused = false;
+                    })
+                    .catch(error => console.error('Training error:', error));
+            } else if (!data.should_train) {
+                this.actionList.forEach((action) => {
+                    this.physics.controls.actions[action] = data.action[action];
+                });
+                // For simplicity, always move forwards
+                this.physics.controls.actions.up = true;
+            }
         })
-        .catch((error) => {
-            console.error('Error in makeAiDecision:', error);
-            console.log("Data sent to AI: ", dataToSend);
-        });
+        .catch(error => console.error('Error calling API:', error));
     }
 
 
     aiTick() {
+        // Stop the car from moving if the game is paused
+        if (this.gamePaused) {
+            this.physics.controls.actions.up = false;
+            return;
+        }
         const currentState = this.getState();
 
         // Check for win
         if (currentState.percentOfTrackCompleted >= 100) {
-            this.makeAiDecision(this.previousState, currentState, this.previousAiDecision, this.rewardWin, true);
+            this.makeAiDecision(currentState, true, true);
             this.resetGame();
             return;
         }
@@ -233,23 +206,20 @@ export default class PlaygroundSection {
         //if (this.physics.car.chassis.body.position.z <= fjcConfig.deathPositionZ) {
         // if any of the rays are too short, the car has fallen off the track
         if (Object.values(this.rayLinesLengths).some(length => length <= this.toleranceDistanceRays)) {
-            this.makeAiDecision(this.previousState, currentState, this.previousAiDecision, this.rewardDeath, true);
+            this.makeAiDecision(currentState, true, false);
+            this.resetGame();
+            return;
+        }
+        // Fall back if the first condition fails
+        if (this.physics.car.chassis.body.position.z <= fjcConfig.deathPositionZ) {
+            this.makeAiDecision(currentState, true, false);
             this.resetGame();
             return;
         }
 
         // When game is in progress, call the AI every callFrequency ticks
         if (this.tickCount % this.callFrequency === 0 && this.tickCount > 0) {
-            // Relative reward, max 1 min -1
-            let relativeReward = currentState.percentOfTrackCompleted - this.previousState.percentOfTrackCompleted;
-            if (relativeReward > this.relativeRewardMax) {
-                relativeReward = this.relativeRewardMax;
-            } else if (relativeReward < -this.relativeRewardMax) {
-                relativeReward = -This.relativeRewardMax;
-            } else if (relativeReward > 0 && relativeReward < 0.1) {
-                relativeReward = this.rewardStagnaion;
-            }
-            this.makeAiDecision(this.previousState, currentState, this.previousAiDecision, relativeReward, false);
+            this.makeAiDecision(currentState, false, false);
             this.tickCount = 0;
         }
     }  
@@ -292,7 +262,6 @@ export default class PlaygroundSection {
                 if (this.percentOfTrackCompleted > 0) {
                     this.gameInProgress = true;
                     this.gameStartTime = Date.now();
-                    this.resetAi();
                 } else {
                     return;
                 }
