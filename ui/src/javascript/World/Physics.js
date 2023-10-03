@@ -312,7 +312,7 @@ export default class Physics
             this.car.vehicle.removeFromWorld(this.world)
             this.models.container.remove(this.car.model.container)
         }
-
+        
         /**
          * Recreate method
          */

@@ -141,6 +141,18 @@ export default class PlaygroundSection {
     *  4. Update the state variables
     */
     makeAiDecision(currentState, gameOver, win) {
+        let randomAction = Math.floor(Math.random() * 2);
+        if (randomAction == 0) {
+            this.physics.controls.actions.right = true;
+            this.physics.controls.actions.left = false;
+        } else {
+            this.physics.controls.actions.right = false;
+            this.physics.controls.actions.left = true;
+        }
+        this.physics.controls.actions.up = true;
+        return;
+
+
         const dataToSend = {
             observation: currentState,
             done: gameOver,
@@ -309,29 +321,27 @@ export default class PlaygroundSection {
 
     updateAndVisualizeRays(carPosX, carPosY, carPosZ, carAngle) {
         if (!this.racetrackRaysModel) return;
-        
-        // Direction vectors are in car's local coordinates
-        const directionsAndMaterials = {
-            left: { direction: new THREE.Vector3(0, 1, 0), material: new THREE.LineBasicMaterial({ color: 0xff0000 }) }, // Pointing upwards
-            right: { direction: new THREE.Vector3(0, -1, 0), material: new THREE.LineBasicMaterial({ color: 0x00ff00 }) }, // Pointing downwards
-            forward: { direction: new THREE.Vector3(1, 0, 0), material: new THREE.LineBasicMaterial({ color: 0x0000ff }) }, // Pointing to the right
-            forwardLeft: { direction: new THREE.Vector3(Math.sqrt(2) / 2, Math.sqrt(2) / 2, 0), material: new THREE.LineBasicMaterial({ color: 0xffff00 }) },
-            forwardRight: { direction: new THREE.Vector3(Math.sqrt(2) / 2, -Math.sqrt(2) / 2, 0), material: new THREE.LineBasicMaterial({ color: 0xff00ff }) },
-        };        
-        
-        // Remove existing ray lines from the container
-        if (this.rayLines){
-            Object.values(this.rayLines).forEach(line => this.container.remove(line));
+    
+        // Initialize rayLines and rayLinesLengths if they don't exist
+        if (!this.rayLines) {
+            this.rayLines = {};
+            this.rayLinesLengths = {};
         }
-        this.rayLines = {};
-        this.rayLinesLengths = {};
         
+        const directions = {
+            left: new THREE.Vector3(0, 1, 0), // Pointing upwards
+            right: new THREE.Vector3(0, -1, 0), // Pointing downwards
+            forward: new THREE.Vector3(1, 0, 0), // Pointing to the right
+            forwardLeft: new THREE.Vector3(Math.sqrt(2) / 2, Math.sqrt(2) / 2, 0),
+            forwardRight: new THREE.Vector3(Math.sqrt(2) / 2, -Math.sqrt(2) / 2, 0),
+        };
+    
         const carPosition = new THREE.Vector3(carPosX, carPosY, carPosZ);
         // Car angle is already in radians
         const rotationMatrix = new THREE.Matrix4().makeRotationZ(carAngle);
         
-        Object.keys(directionsAndMaterials).forEach((key) => {
-            const { direction, material } = directionsAndMaterials[key];
+        Object.keys(directions).forEach((key) => {
+            const direction = directions[key];
             const rotatedDirection = direction.clone().applyMatrix4(rotationMatrix);
             const ray = new THREE.Raycaster(carPosition, rotatedDirection.normalize());
             
@@ -344,13 +354,32 @@ export default class PlaygroundSection {
                 endPoint = carPosition.clone().add(rotatedDirection.multiplyScalar(1000));
             }
             
-            // Draw the visualized ray line
-            const geometry = new THREE.BufferGeometry().setFromPoints([carPosition, endPoint]);
-            this.rayLines[key] = new THREE.Line(geometry, material);
+            // If ray line for key doesn't exist, create it
+            if (!this.rayLines[key]) {
+                const material = new THREE.LineBasicMaterial({ color: this.getColorForKey(key) });
+                const geometry = new THREE.BufferGeometry().setFromPoints([carPosition, endPoint]);
+                this.rayLines[key] = new THREE.Line(geometry, material);
+                this.container.add(this.rayLines[key]);
+            } else {
+                // If ray line for key already exists, update it
+                this.rayLines[key].geometry.setFromPoints([carPosition, endPoint]);
+            }
+            
             this.rayLinesLengths[key] = endPoint.distanceTo(carPosition);
-            this.container.add(this.rayLines[key]);
         });
     }
+    
+    getColorForKey(key) {
+        const colors = {
+            left: 0xff0000,
+            right: 0x00ff00,
+            forward: 0x0000ff,
+            forwardLeft: 0xffff00,
+            forwardRight: 0xff00ff,
+        };
+    
+        return colors[key];
+    }    
 
     getClosestPointOnLineSegments(carX, carY, carZ, lastSegmentIndex) {
         let minDistance = Infinity;
@@ -449,10 +478,10 @@ export default class PlaygroundSection {
         const loader = new GLTFLoader();
 
         // This is just for visualization
-        loader.load(racetrackVizModel, (gltf) => {
-            const model = gltf.scene;
-            this.container.add(model);
-        });
+        // loader.load(racetrackVizModel, (gltf) => {
+        //     const model = gltf.scene;
+        //     this.container.add(model);
+        // });
 
         // This is just for raycasting
         loader.load(racetrackRaysModel, (gltf) => {
@@ -465,7 +494,7 @@ export default class PlaygroundSection {
         // This is for collisions
         this.objects.add({
             //base: this.resources.items.racetrackEmpty.scene, // Empty glb file (has one tiny mesh in it)
-            base: this.resources.items.racetrackEmpty.scene, // Empty glb file (has one tiny mesh in it)
+            base: this.resources.items.racetrack.scene, // Empty glb file (has one tiny mesh in it)
             collision: this.resources.items.racetrack.scene, // This is the mesh that will be used for collision
             floorShadowTexture: null,
             offset: new THREE.Vector3(this.x, this.y, 0),
