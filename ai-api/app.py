@@ -1,99 +1,174 @@
 from flask import Flask, request, jsonify
-from flask_cors import CORS
+from dqn_agent import DQNAgent
 import numpy as np
-import matplotlib
-matplotlib.use('Agg')
+from flask_cors import CORS
 import matplotlib.pyplot as plt
-from agent import Agent
+plt.switch_backend('Agg')
 
 app = Flask(__name__)
 CORS(app)
 
-n_actions = 3
-input_dims = 7
-model = Agent(n_actions=n_actions, input_dims=input_dims)
+action_space = 3
+state_space = 7
+model = DQNAgent(action_space, state_space)
 
-should_train = False
-last_state = None
-last_action = None
-last_policy = None
+# Struct to keep track of agent-specific data
+agent_data = {}
+is_training = False
 
-reward_total = 0
-games_played = 0
-avg_reward_list = []
-
-CHART_INTERVAL = 1  # Per N times we train
-train_count = 0  # Total number of games played
+"""Logging code"""""
+plot_frequency = 40
+total_completed_games = 0 # Never reset
+avarages_array = [] # Array of tuples (avg_reward, avg_percentage)
+completed_games = 0 # Reset after every time we log statistics
+total_percentage_completed = 0 # Reset after every time we log statistics
+total_reward = 0 # Reset after every time we log statistics
+"""End of logging code"""
 
 @app.route('/get_action', methods=['POST'])
 def get_action():
-    global should_train, last_state, last_action, last_policy, reward_total, games_played, train_count
-
-    if should_train:
-        return jsonify({"error": "Model is currently training", "should_train": False}), 503
+    global should_train, completed_games, total_percentage_completed, total_reward, total_completed_games, plot_frequency
 
     data = request.json
+    agent_id = data['agent_id']
     observation = np.array(list(data['observation'].values()))
     done = data['done']
     win = data['win']
 
-    action, log_prob, value = model.choose_action(observation)
+    # Initialize agent's data if not existing
+    if agent_id not in agent_data:
+        agent_data[agent_id] = {
+            "last_state": None,
+            "last_action": None,
+            "paused": False
+        }
 
-    if last_state is not None:
-        progress_reward = observation[0] - last_state[0]
-        reward = progress_reward
-        if done:
-            reward += 10 if win else -2
-        
-        reward_total += reward
-        model.store_transition(last_state, last_action, last_policy, value, reward, done)
+    current_agent = agent_data[agent_id]
 
-    last_state = observation
-    last_action = action
-    last_policy = log_prob
+    # Store training data from previous observation/action as we now have the new observation
+    if current_agent["last_state"] is not None:
+        reward = calculateReward(current_agent["last_state"], observation, done, win)
+        model.store_data(current_agent["last_state"], current_agent["last_action"], observation, reward, done)
 
+        """Logging code"""
+        total_reward += reward
+        """End of logging code"""
+
+    # Decide on next action
+    action = model.get_action(observation)
+
+    # Update agent's data
+    current_agent["last_state"] = observation
+    current_agent["last_action"] = action
+
+    # Decide whether to pause the agent or continue with next action
     if done:
-        games_played += 1
-        last_state = last_action = last_policy = None
+        should_train = True
 
-        if len(model.memory.states) >= (model.memory.batch_size * model.n_epochs * 2): # 10 * 64 * 2 = 1280
-            should_train = True
-            
-            # Logging code
-            avg_reward_list.append(reward_total / games_played)  # Log average reward for the batch
-            reward_total = 0
-            games_played = 0
+        """Logging code"""
+        total_completed_games += 1
+        completed_games += 1
+        total_percentage_completed += observation[0] * 100 # Accounting for normalization of the percentage
+        """End of logging code"""
 
-            train_count += 1
-            if train_count % CHART_INTERVAL == 0:  # Every CHART_INTERVAL times trained, plot and save chart.
-                plt.plot(avg_reward_list, marker='o')
-                plt.xlabel('Times Trained')
-                plt.ylabel('Average Reward')
-                plt.title('Average Reward per Game for Each Batch')
-                plt.savefig(f'./charts/chart_{train_count}.png')
-                plt.close()
+        # Reset agent's data
+        current_agent["last_state"] = None
+        current_agent["last_action"] = None
+        # Notify agent to pause.
+        current_agent["paused"] = True
+        return jsonify({"action": get_action_dict(action), "pause": True})
+    else:
+        return jsonify({"action": get_action_dict(action), "pause": False})
 
-    action_dict = {
+@app.route('/check_unpause', methods=['GET'])
+def check_unpause():
+    global is_training, completed_games
+    agent_id = request.args.get('agent_id')
+
+    # If all agents are paused and training is not ongoing, start training
+    if all([data["paused"] for data in agent_data.values()]) and not is_training:
+        is_training = True
+        print("Training started")
+
+        """Logging code"""
+        print("Completed games in loggin batch: ", completed_games)
+        if completed_games >= plot_frequency:
+            plot_statistics()
+        """End of logging code"""
+
+        # Functionality
+        model.learn()
+        for data in agent_data.values():
+            data["paused"] = False
+        is_training = False
+
+        print("Training finished")
+        return jsonify({"unpause": True})
+
+    if agent_id in agent_data and not agent_data[agent_id]["paused"]:
+        return jsonify({"unpause": True})
+
+    return jsonify({"unpause": False})
+
+""" Utility functions """
+def calculateReward(last_state, observation, done, win):
+    if win:
+        return 10
+    if done and not win:
+        return -2
+    # This is the difference in the % of the game completed
+    return (observation[0] - last_state[0]) * 100 # Accounting for normalization
+
+# Utility function to convert action index to action dictionary.
+def get_action_dict(action_index):
+    action_mappings = {
         0: {"left": True, "right": False,},
         1: {"left": False, "right": False,},
         2: {"left": False, "right": True,},
-    }.get(action, {"left": False, "right": False,})
+    }
+    return action_mappings[action_index]
 
-    print(len(model.memory.states))
-    return jsonify({"action": action_dict, "should_train": should_train})
+"""Logging code"""
+# Plot statistics and save to ./statistics.png
+def plot_statistics():
+    global avarages_array, completed_games, total_percentage_completed, total_reward
+    print("Plotting statistics")
 
+    # Calculate averages for the current batch of games
+    avg_reward = total_reward / completed_games
+    avg_percentage = total_percentage_completed / completed_games
 
-@app.route('/start_training', methods=['POST'])
-def start_training():
-    global should_train
-    if not should_train:
-        return jsonify({"error": "Model is not ready to train"}), 503
+    # Append averages to the array
+    avarages_array.append((avg_reward, avg_percentage))
 
-    print('Model training...')
-    model.learn()  # PPO training
-    should_train = False
-    print('Model training completed')
-    return jsonify({"status": "training_completed"})
+    # Reset counters for the next batch
+    completed_games = 0
+    total_percentage_completed = 0
+    total_reward = 0
+
+    # Extract data for plotting
+    rewards, percentages = zip(*avarages_array)
+    games = [i * plot_frequency for i in range(1, len(avarages_array) + 1)]
+
+    # Create the plot
+    fig, ax1 = plt.subplots()
+
+    color = 'tab:red'
+    ax1.set_xlabel('Total Completed Games')
+    ax1.set_ylabel('Average Reward', color=color)
+    ax1.plot(games, rewards, color=color)
+    ax1.tick_params(axis='y', labelcolor=color)
+
+    ax2 = ax1.twinx()
+    color = 'tab:blue'
+    ax2.set_ylabel('Average % Completed', color=color)
+    ax2.plot(games, percentages, color=color)
+    ax2.tick_params(axis='y', labelcolor=color)
+
+    fig.tight_layout()
+    plt.savefig('./statistics.png')
+    plt.close()
+"""End of logging code"""
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5001)

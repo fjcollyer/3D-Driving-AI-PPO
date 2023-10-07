@@ -1,3 +1,4 @@
+const fjcConfig = require('../fjcConfig.js');
 import { Howl, Howler } from 'howler'
 
 import revealSound from '../../sounds/reveal/reveal-1.mp3'
@@ -193,7 +194,7 @@ export default class Sounds
     setMasterVolume()
     {
         // Set up
-        this.masterVolume = 0.5
+        this.masterVolume = fjcConfig.masterVolume
         Howler.volume(this.masterVolume)
 
         window.requestAnimationFrame(() =>

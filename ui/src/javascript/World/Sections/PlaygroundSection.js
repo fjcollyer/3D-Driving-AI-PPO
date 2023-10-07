@@ -53,6 +53,7 @@ export default class PlaygroundSection {
         this.actionList = ["right", "left"]
         this.actionSpace = this.actionList.length;
         this.gamePaused = false;
+        this.agentId = Math.random().toString(36).substr(2, 9);
 
         this.racetrackRaysModel = null;
 
@@ -101,20 +102,22 @@ export default class PlaygroundSection {
     }
     
     getState() {
-        let state = {};
-
-        // Percent of the track completed
-        state.percentOfTrackCompleted = this.percentOfTrackCompleted;
-
-        // Speed of the car
-        state.carSpeed = this.physics.car.speed;
-
-        // Ray lengths
-        state.rayLengthLeft = this.rayLinesLengths.left;
-        state.rayLengthRight = this.rayLinesLengths.right;
-        state.rayLengthForward = this.rayLinesLengths.forward;
-        state.rayLengthForwardLeft = this.rayLinesLengths.forwardLeft;
-        state.rayLengthForwardRight = this.rayLinesLengths.forwardRight;
+        let normalizedState = {};
+    
+        // Percent of the track completed | Normalized to [0, 1]
+        normalizedState.percentOfTrackCompleted = this.percentOfTrackCompleted / 100;
+    
+        // Speed of the car | Normalized to ~[0, 1]
+        normalizedState.carSpeed = this.physics.car.speed * 10
+    
+        // Ray lengths | Normalized to [0, 1]
+        // First set the max value to 20, then normalize as values can be very high sometimes
+        const maxRayLength = 20;
+        normalizedState.rayLengthLeft = Math.min(this.rayLinesLengths.left, maxRayLength) / maxRayLength;
+        normalizedState.rayLengthRight = Math.min(this.rayLinesLengths.right, maxRayLength) / maxRayLength;
+        normalizedState.rayLengthForward = Math.min(this.rayLinesLengths.forward, maxRayLength) / maxRayLength;
+        normalizedState.rayLengthForwardLeft = Math.min(this.rayLinesLengths.forwardLeft, maxRayLength) / maxRayLength;
+        normalizedState.rayLengthForwardRight = Math.min(this.rayLinesLengths.forwardRight, maxRayLength) / maxRayLength;
 
         // Angle of the car in x-y plane (direction car is pointing)
         // state.carAngle = this.physics.car.angle;
@@ -131,63 +134,60 @@ export default class PlaygroundSection {
         // Distance to the closest point on the track
         // state.closestPointDistance = this.closestPointDistance;
 
-        return state;
+        return normalizedState;
+    }
+
+    // Check if the agent should unpause
+    checkUnpause() {
+        if (this.gamePaused) {
+            console.log("Checking if game should unpause");
+            fetch(`http://localhost:5001/check_unpause?agent_id=${this.agentId}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.unpause) {
+                    console.log("Unpausing game. Data from check_unpause: ", data);
+                    this.gamePaused = false;
+                } else {
+                    setTimeout(() => this.checkUnpause(), 500);  // Use arrow function to retain this context.
+                }
+            })
+            .catch(error => console.error('Unpause check error:', error));
+        }
     }
 
     /*
     *  1. Send data to the AI
     *  2. Receive the AI's decision
     *  3. Make the decision
-    *  4. Update the state variables
     */
     makeAiDecision(currentState, gameOver, win) {
-        let randomAction = Math.floor(Math.random() * 2);
-        if (randomAction == 0) {
-            this.physics.controls.actions.right = true;
-            this.physics.controls.actions.left = false;
-        } else {
-            this.physics.controls.actions.right = false;
-            this.physics.controls.actions.left = true;
-        }
-        this.physics.controls.actions.up = true;
-        return;
-
-
         const dataToSend = {
+            agent_id: this.agentId,
             observation: currentState,
             done: gameOver,
             win: win
         };
+        if (gameOver) {
+            console.log("Game over. Data from get_action: ", dataToSend);
+        }
 
-       fetch('http://localhost:5001/get_action', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify(dataToSend)
+        fetch('http://localhost:5001/get_action', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(dataToSend)
         })
         .then(response => {
             if (!response.ok) {
-                // I want the status and the text in the responese from the flask api
-                // return jsonify({"error": "Model is not ready to train"}), 503 # Service Unavailable
                 throw new Error(`HTTP error from /get_action: ${response.status} ${response.statusText}`);
-
             }
             return response.json();
         })
         .then(data => {
-            if (data.should_train) {
-                console.log("Training started, pausing game. Data from get_action: ", data);
-                // Pause the game and start training.
+            if (data.pause) {
+                console.log("Pausing game. Data from get_action: ", data);
                 this.gamePaused = true;
-                fetch('http://localhost:5001/start_training', {method: 'POST'})
-                    .then(response => {
-                        if (!response.ok) {
-                            throw new Error(`HTTP error from /start_training: ${response.status} ${response.statusText}`);
-                        }
-                        // Resume game after training is complete.
-                        this.gamePaused = false;
-                    })
-                    .catch(error => console.error('Training error:', error));
-            } else if (!data.should_train) {
+                this.checkUnpause();  // Begin periodic checks for unpause.
+            } else {
                 this.actionList.forEach((action) => {
                     this.physics.controls.actions[action] = data.action[action];
                 });
@@ -312,6 +312,9 @@ export default class PlaygroundSection {
             this.resetGame();
             return;
         }
+
+        const state = this.getState();
+        console.log(state);
 
     }
 
