@@ -6,28 +6,6 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import racetrackVizModel from '../../../models/racetrack/racetrackViz.glb';
 import racetrackRaysModel from '../../../models/racetrack/racetrackRays.glb';
 
-/*
-Actions from physics.controls.actions
-        this.actions.up = false
-        this.actions.right = false
-        this.actions.down = false
-        this.actions.left = false
-        this.actions.brake = false
-        this.actions.boost = false
-*/
-
-/*
-Return format for AI decision (python API)
-        action = {
-            "up": binary_action[0],
-            "right": binary_action[1],
-            "down": binary_action[2],
-            "left": binary_action[3],
-            "brake": binary_action[4],
-            "boost": binary_action[5]
-        }
-*/
-
 export default class PlaygroundSection {
     constructor(_options) {
         // Options
@@ -49,9 +27,7 @@ export default class PlaygroundSection {
         this.aiModeActive = true;
         this.callFrequency = 60 / 4 // Example: setting this to 60 will call the AI once per second
         this.toleranceDistanceRays = 0.8;
-        this.stateSpace = 7;
-        this.actionList = ["right", "left"]
-        this.actionSpace = this.actionList.length;
+        this.actionList = ["right", "left", "up", "boost"]
         this.gamePaused = false;
         this.agentId = Math.random().toString(36).substr(2, 9);
 
@@ -99,6 +75,14 @@ export default class PlaygroundSection {
 
         // Reset the car position
         this.physics.car.recreate(fjcConfig.carStartingPosition[0], fjcConfig.carStartingPosition[1], fjcConfig.carStartingPosition[2]);
+
+        // Reset the controls
+        this.physics.controls.actions.up = false;
+        this.physics.controls.actions.down = false;
+        this.physics.controls.actions.left = false;
+        this.physics.controls.actions.right = false;
+        this.physics.controls.actions.brake = false;
+        this.physics.controls.actions.boost = false;
     }
     
     getState() {
@@ -120,19 +104,10 @@ export default class PlaygroundSection {
         normalizedState.rayLengthForwardRight = Math.min(this.rayLinesLengths.forwardRight, maxRayLength) / maxRayLength;
 
         // Angle of the car in x-y plane (direction car is pointing)
-        // state.carAngle = this.physics.car.angle;
+        normalizedState.carAngle = this.physics.car.angle;
 
-        // Direction of the cars movement - not needed/used
-        // state.carDirectionTheta = this.physics.car.directionTheta
-        // state.carDirectionPhi = this.physics.car.directionPhi
-
-        // Position of the car - not needed/used
-        // state.carPositionX = this.physics.car.chassis.body.position.x;
-        // state.carPositionY = this.physics.car.chassis.body.position.y;
-        // state.carPositionZ = this.physics.car.chassis.body.position.z;
-
-        // Distance to the closest point on the track
-        // state.closestPointDistance = this.closestPointDistance;
+        // Z position of the car | Normalized to ~ [-1, 1]
+        normalizedState.carPositionZ = this.physics.car.chassis.body.position.z / 100;
 
         return normalizedState;
     }
@@ -186,13 +161,12 @@ export default class PlaygroundSection {
             if (data.pause) {
                 console.log("Pausing game. Data from get_action: ", data);
                 this.gamePaused = true;
+                this.resetGame();
                 this.checkUnpause();  // Begin periodic checks for unpause.
             } else {
                 this.actionList.forEach((action) => {
                     this.physics.controls.actions[action] = data.action[action];
                 });
-                // For simplicity, always move forwards
-                this.physics.controls.actions.up = true;
             }
         })
         .catch(error => console.error('Error calling API:', error));
@@ -208,15 +182,13 @@ export default class PlaygroundSection {
         const currentState = this.getState();
 
         // Check for win
-        if (currentState.percentOfTrackCompleted >= 100) {
+        if ((currentState.percentOfTrackCompleted * 100) >= 100) { // * 100 because percentOfTrackCompleted is normalized to [0, 1]
             this.makeAiDecision(currentState, true, true);
             this.resetGame();
             return;
         }
 
-        // Check for death
-        //if (this.physics.car.chassis.body.position.z <= fjcConfig.deathPositionZ) {
-        // if any of the rays are too short, the car has fallen off the track
+        // Check for death, if any of the rays are too short, the car has fallen off the track
         if (Object.values(this.rayLinesLengths).some(length => length <= this.toleranceDistanceRays)) {
             this.makeAiDecision(currentState, true, false);
             this.resetGame();
@@ -226,6 +198,17 @@ export default class PlaygroundSection {
         if (this.physics.car.chassis.body.position.z <= fjcConfig.deathPositionZ) {
             this.makeAiDecision(currentState, true, false);
             this.resetGame();
+            return;
+        }
+
+        // Check for auto boost zone
+        if (this.percentOfTrackCompleted > 12.6 && this.percentOfTrackCompleted < 16) {
+            this.physics.controls.actions.boost = true;
+            this.physics.controls.actions.up = true;
+            return;
+        } else if (this.percentOfTrackCompleted > 16 && this.percentOfTrackCompleted < 16.5) {
+            this.physics.controls.actions.boost = false;
+            this.physics.controls.actions.up = false;
             return;
         }
 
@@ -346,7 +329,11 @@ export default class PlaygroundSection {
         Object.keys(directions).forEach((key) => {
             const direction = directions[key];
             const rotatedDirection = direction.clone().applyMatrix4(rotationMatrix);
-            const ray = new THREE.Raycaster(carPosition, rotatedDirection.normalize());
+            
+            // Lift the forward ray in position 0.5 z
+            const rayOrigin = key === 'forward' ? carPosition.clone().add(new THREE.Vector3(0, 0, 0.5)) : carPosition;
+            
+            const ray = new THREE.Raycaster(rayOrigin, rotatedDirection.normalize());
             
             const intersections = ray.intersectObject(this.racetrackRaysModel, true);
             
@@ -354,23 +341,23 @@ export default class PlaygroundSection {
             if (intersections.length > 0) {
                 endPoint = intersections[0].point;
             } else {
-                endPoint = carPosition.clone().add(rotatedDirection.multiplyScalar(1000));
+                endPoint = rayOrigin.clone().add(rotatedDirection.multiplyScalar(1000));
             }
             
             // If ray line for key doesn't exist, create it
             if (!this.rayLines[key]) {
                 const material = new THREE.LineBasicMaterial({ color: this.getColorForKey(key) });
-                const geometry = new THREE.BufferGeometry().setFromPoints([carPosition, endPoint]);
+                const geometry = new THREE.BufferGeometry().setFromPoints([rayOrigin, endPoint]);
                 this.rayLines[key] = new THREE.Line(geometry, material);
                 this.container.add(this.rayLines[key]);
             } else {
                 // If ray line for key already exists, update it
-                this.rayLines[key].geometry.setFromPoints([carPosition, endPoint]);
+                this.rayLines[key].geometry.setFromPoints([rayOrigin, endPoint]);
             }
             
-            this.rayLinesLengths[key] = endPoint.distanceTo(carPosition);
+            this.rayLinesLengths[key] = endPoint.distanceTo(rayOrigin);
         });
-    }
+    }    
     
     getColorForKey(key) {
         const colors = {

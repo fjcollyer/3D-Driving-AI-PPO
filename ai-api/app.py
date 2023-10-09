@@ -8,9 +8,10 @@ plt.switch_backend('Agg')
 app = Flask(__name__)
 CORS(app)
 
-action_space = 3
-state_space = 7
-model = DQNAgent(action_space, state_space)
+action_space = 9
+state_space = 9
+saved_model_path = './model_350'
+model = DQNAgent(action_space, state_space, saved_model_path=saved_model_path)
 
 # Struct to keep track of agent-specific data
 agent_data = {}
@@ -115,18 +116,39 @@ def calculateReward(last_state, observation, done, win):
     if win:
         return 10
     if done and not win:
-        return -2
+        return -10
     # This is the difference in the % of the game completed
-    return (observation[0] - last_state[0]) * 100 # Accounting for normalization
+    reward = (observation[0] - last_state[0]) * 100 # Accounting for normalization
+    # Punish staying still
+    if reward >= 0 and reward < 0.1:
+        reward = -2
+    
+    return reward
 
 # Utility function to convert action index to action dictionary.
 def get_action_dict(action_index):
     action_mappings = {
-        0: {"left": True, "right": False,},
-        1: {"left": False, "right": False,},
-        2: {"left": False, "right": True,},
+        0: {"up": True},
+        1: {"up": True, "left": True},
+        2: {"up": True, "right": True},
+        3: {"up": True, "boost": True},
+        4: {"up": True, "left": True, "boost": True},
+        5: {"up": True, "right": True, "boost": True},
+        6: {"left": True},
+        7: {"right": True},
+        8: {}  # Represents the 'Nothing' action
     }
-    return action_mappings[action_index]
+
+    # Get the action mapping for the given index
+    action_dict = action_mappings[action_index]
+
+    # Ensure all actions are included in the dictionary
+    all_actions = ["up", "left", "right", "boost"]
+    for action in all_actions:
+        if action not in action_dict:
+            action_dict[action] = False
+
+    return action_dict
 
 """Logging code"""
 # Plot statistics and save to ./statistics.png

@@ -1,3 +1,4 @@
+import os
 import time
 import numpy as np
 import tensorflow as tf
@@ -5,30 +6,37 @@ from collections import deque
 import random
 
 class DQNAgent:
-    def __init__(self, action_space, state_space):
+    def __init__(self, action_space, state_space, saved_model_path=None):
         self.action_space = action_space
         self.state_space = state_space
 
         # Hyperparameters
         self.lr = 0.001
         self.gamma = 0.99
-        self.batch_size = 128
-        self.epsilon = 1.0
+        self.batch_size = 256
+        self.epsilon = 0.1
         self.epsilon_decay = 0.995
         self.epsilon_min = 0.1
         self.memory = deque(maxlen=20000)
-        self.target_update_freq = 2 # Every x times the train function is called, update the target network
+        self.target_update_freq = 4 # Every x times the train function is called, update the target network
         self.train_step_counter = 0
 
-        # Create main and target Q-networks
-        self.model = self.create_model()
+        # Load a saved model if a path is provided, otherwise create a new model
+        if saved_model_path and os.path.exists(saved_model_path):
+            self.model = tf.keras.models.load_model(saved_model_path)
+            print(f"Model loaded from {saved_model_path}")
+        else:
+            self.model = self.create_model()
+
+        # Create and initialize the target Q-network
         self.target_model = self.create_model()
         self.target_model.set_weights(self.model.get_weights())
 
     def create_model(self):
         model = tf.keras.models.Sequential([
-            tf.keras.layers.Dense(24, activation='relu', input_dim=self.state_space),
-            tf.keras.layers.Dense(24, activation='relu'),
+            tf.keras.layers.Dense(256, activation='relu', input_dim=self.state_space),
+            tf.keras.layers.Dense(256, activation='relu'),
+            tf.keras.layers.Dense(128, activation='relu'), 
             tf.keras.layers.Dense(self.action_space, activation='linear')
         ])
         model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=self.lr), loss='mse')
@@ -72,3 +80,16 @@ class DQNAgent:
         self.train_step_counter += 1
         if self.train_step_counter % self.target_update_freq == 0:
             self.target_model.set_weights(self.model.get_weights())
+
+        # Save model
+        if self.train_step_counter % 25 == 0:
+            self.save_model()
+
+    def save_model(self):
+      # Ensure the directory exists
+      if not os.path.exists('./models'):
+          os.makedirs('./models')
+
+      save_path = './models/model_{}'.format(self.train_step_counter)
+      self.model.save(save_path, save_format='tf')
+      print(f"Model saved to {save_path}")
