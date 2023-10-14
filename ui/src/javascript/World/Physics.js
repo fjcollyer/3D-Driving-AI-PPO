@@ -503,6 +503,7 @@ export default class Physics
 
                 if(this.controls.touch.joystick.active)
                 {
+                    console.log(this.controls.touch.joystick.angle.value)
                     // Calculate delta between joystick and car angles
                     deltaAngle = (this.controls.touch.joystick.angle.value - this.car.angle + Math.PI) % (Math.PI * 2) - Math.PI
                     deltaAngle = deltaAngle < - Math.PI ? deltaAngle + Math.PI * 2 : deltaAngle

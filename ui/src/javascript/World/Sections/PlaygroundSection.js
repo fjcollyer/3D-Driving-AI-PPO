@@ -24,7 +24,7 @@ export default class PlaygroundSection {
         this.tickCount = 0;
 
         // AI config
-        this.aiModeActive = true;
+        this.aiModeActive = false;
         this.callFrequency = 60 / 4 // Example: setting this to 60 will call the AI once per second
         this.toleranceDistanceRays = 0.8;
         this.actionList = ["right", "left", "up", "boost"]
@@ -51,6 +51,12 @@ export default class PlaygroundSection {
         // Reset the game logic variables
         this.gameInProgress = false;
         this.gameStartTime = null;
+        this.countDownInProgress = false;
+        
+        const touchStartEvent = new Event('touchstart');
+        window.dispatchEvent(touchStartEvent);
+
+        this.physics.world.gravity.set(0, 0, fjcConfig.gravityZ);
 
         this.segmentIndex = 0;
         if (this.line) {
@@ -90,24 +96,29 @@ export default class PlaygroundSection {
     
         // Percent of the track completed | Normalized to [0, 1]
         normalizedState.percentOfTrackCompleted = this.percentOfTrackCompleted / 100;
+
+        // Angle of the car in x-y plane (direction car is pointing)
+        // Normalized to ~ [0, 1]
+        normalizedState.carAngle = (this.physics.car.angle + Math.PI) / (2 * Math.PI);
     
         // Speed of the car | Normalized to ~[0, 1]
         normalizedState.carSpeed = this.physics.car.speed * 10
     
         // Ray lengths | Normalized to [0, 1]
-        // First set the max value to 20, then normalize as values can be very high sometimes
+        // First set the max value then normalize as values can be very high sometimes
         const maxRayLength = 20;
         normalizedState.rayLengthLeft = Math.min(this.rayLinesLengths.left, maxRayLength) / maxRayLength;
         normalizedState.rayLengthRight = Math.min(this.rayLinesLengths.right, maxRayLength) / maxRayLength;
         normalizedState.rayLengthForward = Math.min(this.rayLinesLengths.forward, maxRayLength) / maxRayLength;
-        normalizedState.rayLengthForwardLeft = Math.min(this.rayLinesLengths.forwardLeft, maxRayLength) / maxRayLength;
-        normalizedState.rayLengthForwardRight = Math.min(this.rayLinesLengths.forwardRight, maxRayLength) / maxRayLength;
+        normalizedState.rayLengthForwardLeft1 = Math.min(this.rayLinesLengths.forwardLeft1, maxRayLength) / maxRayLength;
+        normalizedState.rayLengthForwardLeft2 = Math.min(this.rayLinesLengths.forwardLeft2, maxRayLength) / maxRayLength;
+        normalizedState.rayLengthForwardRight1 = Math.min(this.rayLinesLengths.forwardRight1, maxRayLength) / maxRayLength;
+        normalizedState.rayLengthForwardRight2 = Math.min(this.rayLinesLengths.forwardRight2, maxRayLength) / maxRayLength;
 
-        // Angle of the car in x-y plane (direction car is pointing)
-        normalizedState.carAngle = this.physics.car.angle;
 
-        // Z position of the car | Normalized to ~ [-1, 1]
-        normalizedState.carPositionZ = this.physics.car.chassis.body.position.z / 100;
+        // Z position of the car | Normalized to ~ [0, 1]
+        // 35.5 Is the height at the lowest point of the track
+        // normalizedState.carPositionZ = (this.physics.car.chassis.body.position.z - 35.5) / 2
 
         return normalizedState;
     }
@@ -167,6 +178,15 @@ export default class PlaygroundSection {
                 this.actionList.forEach((action) => {
                     this.physics.controls.actions[action] = data.action[action];
                 });
+                // Check for auto boost zone
+                // Ramp starts at 13% and ends at 14.5%
+                // We are in the air from 14.5% to 18%
+                // Landing ramp starts at 18
+                if (this.percentOfTrackCompleted > 12 && this.percentOfTrackCompleted < 16) {
+                    this.physics.controls.actions.up = true;
+                    this.physics.controls.actions.boost = true;
+                    return;
+                }
             }
         })
         .catch(error => console.error('Error calling API:', error));
@@ -179,6 +199,10 @@ export default class PlaygroundSection {
             this.physics.controls.actions.up = false;
             return;
         }
+        if (!this.gameInProgress) {
+            return;
+        }
+
         const currentState = this.getState();
 
         // Check for win
@@ -200,15 +224,10 @@ export default class PlaygroundSection {
             this.resetGame();
             return;
         }
-
-        // Check for auto boost zone
-        if (this.percentOfTrackCompleted > 12.6 && this.percentOfTrackCompleted < 16) {
-            this.physics.controls.actions.boost = true;
-            this.physics.controls.actions.up = true;
-            return;
-        } else if (this.percentOfTrackCompleted > 16 && this.percentOfTrackCompleted < 16.5) {
-            this.physics.controls.actions.boost = false;
-            this.physics.controls.actions.up = false;
+        // Check for death by staying still
+        if (this.physics.car.speed < 0.001 && (Date.now() - this.gameStartTime) > 5000)  { // ms
+            this.makeAiDecision(currentState, true, false);
+            this.resetGame();
             return;
         }
 
@@ -244,36 +263,31 @@ export default class PlaygroundSection {
             this.updateAndVisualizeRays(this.carPositionX, this.carPositionY, this.carPositionZ, this.physics.car.angle);
             //console.log(this.rayLinesLengths)
 
-            // Automatically move forwards untill the game starts when in AI mode
-            if (!this.gameInProgress && this.aiModeActive) {
-                this.physics.controls.actions.up = true;
-                this.physics.controls.actions.down = false;
-                this.physics.controls.actions.left = false;
-                this.physics.controls.actions.right = false;
-                this.physics.controls.actions.brake = false;
-                this.physics.controls.actions.boost = false;
-
-                // Check if the car has passed the start line
-                if (this.percentOfTrackCompleted > 0) {
-                    this.gameInProgress = true;
-                    this.gameStartTime = Date.now();
-                } else {
-                    return;
-                }
+            // Wait if the game is paused
+            if (this.gamePaused) {
+                return;
             }
 
-            if (!this.gameInProgress && !this.aiModeActive) {
-                // Check if the car has passed the start line
-                if (this.percentOfTrackCompleted > 0) {
-                    this.gameInProgress = true;
-                    this.gameStartTime = Date.now();
-                } else {
+            // 1 second countdown before the game starts
+            if (!this.gameInProgress) {
+                if (this.countDownInProgress) {
                     return;
                 }
+                if (this.carPositionZ > 36) {
+                    return;
+                }
+                this.countDownInProgress = true;
+                setTimeout(() => {
+                    this.gameInProgress = true;
+                    this.countDownInProgress = false;
+                    this.gameStartTime = Date.now();
+                } , 1000);
+                return;
             }
 
+            // In game logic
             if (this.gameInProgress) {
-                this.updateHtml()
+                this.updateHtml();
 
                 // AI logic
                 if (this.aiModeActive && this.gameInProgress) {
@@ -295,9 +309,18 @@ export default class PlaygroundSection {
             this.resetGame();
             return;
         }
-
         const state = this.getState();
-        console.log(state);
+
+        // Activate the joystick
+        this.physics.controls.touch.joystick.active = true;
+
+        // Retrieve the center values
+        let centerX = this.physics.controls.touch.joystick.angle.center.x;
+        let centerY = this.physics.controls.touch.joystick.angle.center.y;
+
+        // Set the current values relative to the center
+        this.physics.controls.touch.joystick.angle.value = 0;
+
 
     }
 
@@ -313,37 +336,39 @@ export default class PlaygroundSection {
             this.rayLines = {};
             this.rayLinesLengths = {};
         }
-        
+    
         const directions = {
             left: new THREE.Vector3(0, 1, 0), // Pointing upwards
             right: new THREE.Vector3(0, -1, 0), // Pointing downwards
             forward: new THREE.Vector3(1, 0, 0), // Pointing to the right
-            forwardLeft: new THREE.Vector3(Math.sqrt(2) / 2, Math.sqrt(2) / 2, 0),
-            forwardRight: new THREE.Vector3(Math.sqrt(2) / 2, -Math.sqrt(2) / 2, 0),
+            forwardLeft1: new THREE.Vector3(Math.cos(Math.PI / 8), Math.sin(Math.PI / 8), 0), // 22.5 degrees
+            forwardLeft2: new THREE.Vector3(Math.sqrt(2) / 2, Math.sqrt(2) / 2, 0), // 45 degrees
+            forwardRight1: new THREE.Vector3(Math.cos(-Math.PI / 8), Math.sin(-Math.PI / 8), 0), // -22.5 degrees
+            forwardRight2: new THREE.Vector3(Math.sqrt(2) / 2, -Math.sqrt(2) / 2, 0), // -45 degrees
         };
     
         const carPosition = new THREE.Vector3(carPosX, carPosY, carPosZ);
         // Car angle is already in radians
         const rotationMatrix = new THREE.Matrix4().makeRotationZ(carAngle);
-        
+    
         Object.keys(directions).forEach((key) => {
             const direction = directions[key];
             const rotatedDirection = direction.clone().applyMatrix4(rotationMatrix);
-            
+    
             // Lift the forward ray in position 0.5 z
             const rayOrigin = key === 'forward' ? carPosition.clone().add(new THREE.Vector3(0, 0, 0.5)) : carPosition;
-            
+    
             const ray = new THREE.Raycaster(rayOrigin, rotatedDirection.normalize());
-            
+    
             const intersections = ray.intersectObject(this.racetrackRaysModel, true);
-            
+    
             let endPoint;
             if (intersections.length > 0) {
                 endPoint = intersections[0].point;
             } else {
                 endPoint = rayOrigin.clone().add(rotatedDirection.multiplyScalar(1000));
             }
-            
+    
             // If ray line for key doesn't exist, create it
             if (!this.rayLines[key]) {
                 const material = new THREE.LineBasicMaterial({ color: this.getColorForKey(key) });
@@ -354,22 +379,24 @@ export default class PlaygroundSection {
                 // If ray line for key already exists, update it
                 this.rayLines[key].geometry.setFromPoints([rayOrigin, endPoint]);
             }
-            
+    
             this.rayLinesLengths[key] = endPoint.distanceTo(rayOrigin);
         });
-    }    
+    }
     
     getColorForKey(key) {
         const colors = {
             left: 0xff0000,
             right: 0x00ff00,
             forward: 0x0000ff,
-            forwardLeft: 0xffff00,
-            forwardRight: 0xff00ff,
+            forwardLeft1: 0xffff33,
+            forwardLeft2: 0xffff00,
+            forwardRight1: 0xff33ff,
+            forwardRight2: 0xff00ff,
         };
     
         return colors[key];
-    }    
+    }     
 
     getClosestPointOnLineSegments(carX, carY, carZ, lastSegmentIndex) {
         let minDistance = Infinity;

@@ -2,7 +2,7 @@ const fjcConfig = {
   debug: false,
   cyberTruck: true,
   masterVolume: 0,
-  carStartingPosition: [0, 5, 40],
+  carStartingPosition: [0, 0, 40],
   deathPositionZ: 34,
   gravityZ: -1.7,
   pointsForLine: {

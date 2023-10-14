@@ -13,12 +13,12 @@ class DQNAgent:
         # Hyperparameters
         self.lr = 0.001
         self.gamma = 0.99
-        self.batch_size = 256
-        self.epsilon = 0.1
-        self.epsilon_decay = 0.995
-        self.epsilon_min = 0.1
+        self.batch_size = 128
+        self.epsilon = 1.0
+        self.epsilon_decay = 0.99
+        self.epsilon_min = 0.0
         self.memory = deque(maxlen=20000)
-        self.target_update_freq = 4 # Every x times the train function is called, update the target network
+        self.target_update_freq = 5 # Every x times the train function is called, update the target network
         self.train_step_counter = 0
 
         # Load a saved model if a path is provided, otherwise create a new model
@@ -34,10 +34,14 @@ class DQNAgent:
 
     def create_model(self):
         model = tf.keras.models.Sequential([
-            tf.keras.layers.Dense(256, activation='relu', input_dim=self.state_space),
+            tf.keras.layers.Input(shape=(self.state_space,)),  # Input layer
+            tf.keras.layers.Dense(512, activation='relu'), 
+            tf.keras.layers.Dense(512, activation='relu'), 
             tf.keras.layers.Dense(256, activation='relu'),
-            tf.keras.layers.Dense(128, activation='relu'), 
-            tf.keras.layers.Dense(self.action_space, activation='linear')
+            tf.keras.layers.Dense(256, activation='relu'),
+            tf.keras.layers.Dense(128, activation='relu'),
+            tf.keras.layers.Dense(128, activation='relu'),
+            tf.keras.layers.Dense(self.action_space, activation='linear')  # Output layer
         ])
         model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=self.lr), loss='mse')
         return model
@@ -48,6 +52,7 @@ class DQNAgent:
     def get_action(self, state):
         if np.random.rand() <= self.epsilon:
             return np.random.choice(self.action_space)
+        state = np.delete(state, 0)  # Exclude the 0th element
         q_values = self.model.predict(state.reshape(1, -1))
         return np.argmax(q_values[0])
 
@@ -82,7 +87,7 @@ class DQNAgent:
             self.target_model.set_weights(self.model.get_weights())
 
         # Save model
-        if self.train_step_counter % 25 == 0:
+        if self.train_step_counter % 100 == 0:
             self.save_model()
 
     def save_model(self):

@@ -5,12 +5,14 @@ from flask_cors import CORS
 import matplotlib.pyplot as plt
 plt.switch_backend('Agg')
 
+# 1325 model is great
+
 app = Flask(__name__)
 CORS(app)
 
-action_space = 9
+action_space = 6
 state_space = 9
-saved_model_path = './model_350'
+saved_model_path = None
 model = DQNAgent(action_space, state_space, saved_model_path=saved_model_path)
 
 # Struct to keep track of agent-specific data
@@ -18,7 +20,7 @@ agent_data = {}
 is_training = False
 
 """Logging code"""""
-plot_frequency = 40
+plot_frequency = 100 # How often to plot statistics, needs to be a multiple of 4 as we use 4 browsers/agents
 total_completed_games = 0 # Never reset
 avarages_array = [] # Array of tuples (avg_reward, avg_percentage)
 completed_games = 0 # Reset after every time we log statistics
@@ -49,7 +51,10 @@ def get_action():
     # Store training data from previous observation/action as we now have the new observation
     if current_agent["last_state"] is not None:
         reward = calculateReward(current_agent["last_state"], observation, done, win)
-        model.store_data(current_agent["last_state"], current_agent["last_action"], observation, reward, done)
+        # We want to remove the observation[0] and last_state[0]
+        edited_observation = np.delete(observation, 0)
+        edited_last_state = np.delete(current_agent["last_state"], 0)
+        model.store_data(edited_last_state, current_agent["last_action"], edited_observation, reward, done)
 
         """Logging code"""
         total_reward += reward
@@ -114,15 +119,22 @@ def check_unpause():
 """ Utility functions """
 def calculateReward(last_state, observation, done, win):
     if win:
-        return 10
+        return 1
     if done and not win:
-        return -10
-    # This is the difference in the % of the game completed
-    reward = (observation[0] - last_state[0]) * 100 # Accounting for normalization
-    # Punish staying still
-    if reward >= 0 and reward < 0.1:
-        reward = -2
+        return -1
     
+    # This is the difference in the % of the game completed
+    reward = (observation[0] - last_state[0]) * 10
+
+    # In the zone before the auto boost, we want to encourage the agent to stay at a correct angle
+    if observation[0] > 0.09 and observation[0] < 0.13:
+        if (observation[1] > 0.99 or observation[1] < 0.01):
+            print("In the zone and at a good angle")
+            reward += 0.1
+        else:
+            print("In the zone but at a bad angle")
+            reward -= 0.1
+
     return reward
 
 # Utility function to convert action index to action dictionary.
@@ -134,9 +146,9 @@ def get_action_dict(action_index):
         3: {"up": True, "boost": True},
         4: {"up": True, "left": True, "boost": True},
         5: {"up": True, "right": True, "boost": True},
-        6: {"left": True},
-        7: {"right": True},
-        8: {}  # Represents the 'Nothing' action
+        #6: {"left": True},
+        #7: {"right": True},
+        #8: {}  # Represents the 'Nothing' action
     }
 
     # Get the action mapping for the given index
