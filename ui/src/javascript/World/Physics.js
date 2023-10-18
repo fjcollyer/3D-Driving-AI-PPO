@@ -116,6 +116,8 @@ export default class Physics
         this.car.speed = 0
         this.car.worldForward = new CANNON.Vec3()
         this.car.angle = 0
+        // fjc
+        this.car.pitchAngle = 0
         this.car.forwardSpeed = 0
         this.car.oldPosition = new CANNON.Vec3()
         this.car.goingForward = true
@@ -403,6 +405,9 @@ export default class Physics
             const localForward = new CANNON.Vec3(1, 0, 0)
             this.car.chassis.body.vectorToWorldFrame(localForward, this.car.worldForward)
             this.car.angle = Math.atan2(this.car.worldForward.y, this.car.worldForward.x)
+            // Calculate pitch angle (angle the car is pointing in the z-direction)
+            // fjc
+            this.car.pitchAngle = Math.asin(this.car.worldForward.z / this.car.worldForward.length()) * (180 / Math.PI);
 
             this.car.forwardSpeed = this.car.worldForward.dot(positionDelta)
             this.car.goingForward = this.car.forwardSpeed > 0

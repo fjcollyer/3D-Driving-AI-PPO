@@ -5,6 +5,7 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 
 import racetrackVizModel from '../../../models/racetrack/racetrackViz.glb';
 import racetrackRaysModel from '../../../models/racetrack/racetrackRays.glb';
+import racetrackCollisionModel from '../../../models/racetrack/racetrack.glb';
 
 export default class PlaygroundSection {
     constructor(_options) {
@@ -24,7 +25,7 @@ export default class PlaygroundSection {
         this.tickCount = 0;
 
         // AI config
-        this.aiModeActive = false;
+        this.aiModeActive = true;
         this.callFrequency = 60 / 4 // Example: setting this to 60 will call the AI once per second
         this.toleranceDistanceRays = 0.8;
         this.actionList = ["right", "left", "up", "boost"]
@@ -32,6 +33,7 @@ export default class PlaygroundSection {
         this.agentId = Math.random().toString(36).substr(2, 9);
 
         this.racetrackRaysModel = null;
+        this.racetrackDownRayModel = null;
 
         // Game logic setup
         this.resetGame();
@@ -53,8 +55,8 @@ export default class PlaygroundSection {
         this.gameStartTime = null;
         this.countDownInProgress = false;
         
-        const touchStartEvent = new Event('touchstart');
-        window.dispatchEvent(touchStartEvent);
+        // const touchStartEvent = new Event('touchstart');
+        // window.dispatchEvent(touchStartEvent);
 
         this.physics.world.gravity.set(0, 0, fjcConfig.gravityZ);
 
@@ -97,15 +99,16 @@ export default class PlaygroundSection {
         // Percent of the track completed | Normalized to [0, 1]
         normalizedState.percentOfTrackCompleted = this.percentOfTrackCompleted / 100;
 
-        // Angle of the car in x-y plane (direction car is pointing)
-        // Normalized to ~ [0, 1]
+        // Angle of the car in x-y plane (direction car is pointing) | Normalized to ~ [0, 1]
         normalizedState.carAngle = (this.physics.car.angle + Math.PI) / (2 * Math.PI);
+
+        // Angle z of the car (tilt of the car) |  Normalized to ~ [0, 1]
+        normalizedState.carAngleZ = (this.physics.car.pitchAngle / 90)
     
         // Speed of the car | Normalized to ~[0, 1]
         normalizedState.carSpeed = this.physics.car.speed * 10
     
         // Ray lengths | Normalized to [0, 1]
-        // First set the max value then normalize as values can be very high sometimes
         const maxRayLength = 20;
         normalizedState.rayLengthLeft = Math.min(this.rayLinesLengths.left, maxRayLength) / maxRayLength;
         normalizedState.rayLengthRight = Math.min(this.rayLinesLengths.right, maxRayLength) / maxRayLength;
@@ -115,10 +118,14 @@ export default class PlaygroundSection {
         normalizedState.rayLengthForwardRight1 = Math.min(this.rayLinesLengths.forwardRight1, maxRayLength) / maxRayLength;
         normalizedState.rayLengthForwardRight2 = Math.min(this.rayLinesLengths.forwardRight2, maxRayLength) / maxRayLength;
 
-
-        // Z position of the car | Normalized to ~ [0, 1]
-        // 35.5 Is the height at the lowest point of the track
-        // normalizedState.carPositionZ = (this.physics.car.chassis.body.position.z - 35.5) / 2
+        // Downward ray length | Normalized to 0 or 1, 1 when car is in the air
+        const maxDownwardRayLength = 5;
+        const normalizedLen = Math.min(this.rayLinesLengths.downward, maxDownwardRayLength) / maxDownwardRayLength;
+        if (normalizedLen > 0.15) {
+            normalizedState.rayLengthDownward = 1;
+        } else {
+            normalizedState.rayLengthDownward = 0;
+        }
 
         return normalizedState;
     }
@@ -212,8 +219,9 @@ export default class PlaygroundSection {
             return;
         }
 
-        // Check for death, if any of the rays are too short, the car has fallen off the track
-        if (Object.values(this.rayLinesLengths).some(length => length <= this.toleranceDistanceRays)) {
+        // Check for death, if any of the rays (excluding the downward ray) are too short the car has fallen off the track
+        if (Object.entries(this.rayLinesLengths).filter(([key, _]) => key !== 'downward').some(([, length]) => length <= this.toleranceDistanceRays)) {
+            console.log("Death by falling off the track");
             this.makeAiDecision(currentState, true, false);
             this.resetGame();
             return;
@@ -304,22 +312,21 @@ export default class PlaygroundSection {
 
     playerTick() {
         // Check for death
-        // if any of the rays are too short, the car has fallen off the track
-        if (Object.values(this.rayLinesLengths).some(length => length <= this.toleranceDistanceRays)) {
+        if (Object.entries(this.rayLinesLengths).filter(([key, _]) => key !== 'downward').some(([, length]) => length <= this.toleranceDistanceRays)) {
             this.resetGame();
             return;
         }
         const state = this.getState();
 
-        // Activate the joystick
-        this.physics.controls.touch.joystick.active = true;
+        // // Activate the joystick
+        // this.physics.controls.touch.joystick.active = true;
 
-        // Retrieve the center values
-        let centerX = this.physics.controls.touch.joystick.angle.center.x;
-        let centerY = this.physics.controls.touch.joystick.angle.center.y;
+        // // Retrieve the center values
+        // let centerX = this.physics.controls.touch.joystick.angle.center.x;
+        // let centerY = this.physics.controls.touch.joystick.angle.center.y;
 
-        // Set the current values relative to the center
-        this.physics.controls.touch.joystick.angle.value = 0;
+        // // Set the current values relative to the center
+        // this.physics.controls.touch.joystick.angle.value = 0;
 
 
     }
@@ -329,7 +336,10 @@ export default class PlaygroundSection {
     */
 
     updateAndVisualizeRays(carPosX, carPosY, carPosZ, carAngle) {
-        if (!this.racetrackRaysModel) return;
+        if (!this.racetrackRaysModel || !this.racetrackDownRayModel) {
+            console.log("Racetrack models not loaded yet");
+            return;
+        }
     
         // Initialize rayLines and rayLinesLengths if they don't exist
         if (!this.rayLines) {
@@ -345,6 +355,7 @@ export default class PlaygroundSection {
             forwardLeft2: new THREE.Vector3(Math.sqrt(2) / 2, Math.sqrt(2) / 2, 0), // 45 degrees
             forwardRight1: new THREE.Vector3(Math.cos(-Math.PI / 8), Math.sin(-Math.PI / 8), 0), // -22.5 degrees
             forwardRight2: new THREE.Vector3(Math.sqrt(2) / 2, -Math.sqrt(2) / 2, 0), // -45 degrees
+            downward: new THREE.Vector3(0, 0, -1)  // Pointing straight down in the z direction
         };
     
         const carPosition = new THREE.Vector3(carPosX, carPosY, carPosZ);
@@ -355,12 +366,16 @@ export default class PlaygroundSection {
             const direction = directions[key];
             const rotatedDirection = direction.clone().applyMatrix4(rotationMatrix);
     
-            // Lift the forward ray in position 0.5 z
-            const rayOrigin = key === 'forward' ? carPosition.clone().add(new THREE.Vector3(0, 0, 0.5)) : carPosition;
+            const rayOrigin = carPosition;
     
             const ray = new THREE.Raycaster(rayOrigin, rotatedDirection.normalize());
     
-            const intersections = ray.intersectObject(this.racetrackRaysModel, true);
+            let intersections;
+            if (key === 'downward') {
+                intersections = ray.intersectObject(this.racetrackDownRayModel, true);  // Intersect with the racetrackDownRay model
+            } else {
+                intersections = ray.intersectObject(this.racetrackRaysModel, true);  // Intersect with the racetrackRays model
+            }
     
             let endPoint;
             if (intersections.length > 0) {
@@ -382,7 +397,7 @@ export default class PlaygroundSection {
     
             this.rayLinesLengths[key] = endPoint.distanceTo(rayOrigin);
         });
-    }
+    }    
     
     getColorForKey(key) {
         const colors = {
@@ -393,6 +408,7 @@ export default class PlaygroundSection {
             forwardLeft2: 0xffff00,
             forwardRight1: 0xff33ff,
             forwardRight2: 0xff00ff,
+            downward: 0x00ffff
         };
     
         return colors[key];
@@ -492,7 +508,8 @@ export default class PlaygroundSection {
     }
 
     loadRacetrack() {
-        const loader = new GLTFLoader();
+        const loader1 = new GLTFLoader();
+        const loader2 = new GLTFLoader();
 
         // This is just for visualization
         // loader.load(racetrackVizModel, (gltf) => {
@@ -501,10 +518,18 @@ export default class PlaygroundSection {
         // });
 
         // This is just for raycasting
-        loader.load(racetrackRaysModel, (gltf) => {
+        loader1.load(racetrackRaysModel, (gltf) => {
             const model = gltf.scene;
             model.visible = false; // Set visible to false
             this.racetrackRaysModel = model;
+            this.container.add(model);
+        });
+
+        // This is just for raycasting of the downward ray
+        loader2.load(racetrackCollisionModel, (gltf) => {
+            const model = gltf.scene;
+            model.visible = false; // Set visible to false
+            this.racetrackDownRayModel = model;
             this.container.add(model);
         });
 

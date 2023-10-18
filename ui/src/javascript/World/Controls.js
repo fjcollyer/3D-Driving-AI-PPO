@@ -229,7 +229,7 @@ export default class Controls extends EventEmitter
                     this.touch.joystick.angle.current.x - this.touch.joystick.angle.center.x
                 )
                 this.touch.joystick.angle.value = this.touch.joystick.angle.originalValue + this.touch.joystick.angle.offset
-                console.log(this.touch.joystick.angle.value)
+                //console.log(this.touch.joystick.angle.value)
                 // Update joystick
                 const distance = Math.hypot(this.touch.joystick.angle.current.y - this.touch.joystick.angle.center.y, this.touch.joystick.angle.current.x - this.touch.joystick.angle.center.x)
                 let radius = distance
