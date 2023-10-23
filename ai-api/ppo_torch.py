@@ -49,7 +49,7 @@ class PPOMemory:
 
 class ActorNetwork(nn.Module):
     def __init__(self, n_actions, input_dims, alpha,
-            fc1_dims=256, fc2_dims=256, chkpt_dir='./saved_models'):
+            fc1_dims=512, fc2_dims=256, fc3_dims=128, chkpt_dir='./saved_models'):
         super(ActorNetwork, self).__init__()
 
         self.checkpoint_file = os.path.join(chkpt_dir, 'actor_torch_ppo')
@@ -58,7 +58,9 @@ class ActorNetwork(nn.Module):
                 nn.ReLU(),
                 nn.Linear(fc1_dims, fc2_dims),
                 nn.ReLU(),
-                nn.Linear(fc2_dims, n_actions),
+                nn.Linear(fc2_dims, fc3_dims),
+                nn.ReLU(),
+                nn.Linear(fc3_dims, n_actions),
                 nn.Softmax(dim=-1)
         )
 
@@ -79,7 +81,7 @@ class ActorNetwork(nn.Module):
         self.load_state_dict(T.load(self.checkpoint_file))
 
 class CriticNetwork(nn.Module):
-    def __init__(self, input_dims, alpha, fc1_dims=256, fc2_dims=256,
+    def __init__(self, input_dims, alpha, fc1_dims=256, fc2_dims=256, fc3_dims=128,
             chkpt_dir='./saved_models'):
         super(CriticNetwork, self).__init__()
 
@@ -89,7 +91,9 @@ class CriticNetwork(nn.Module):
                 nn.ReLU(),
                 nn.Linear(fc1_dims, fc2_dims),
                 nn.ReLU(),
-                nn.Linear(fc2_dims, 1)
+                nn.Linear(fc2_dims, fc3_dims),
+                nn.ReLU(),
+                nn.Linear(fc3_dims, 1)
         )
 
         self.optimizer = optim.Adam(self.parameters(), lr=alpha)
@@ -109,13 +113,13 @@ class CriticNetwork(nn.Module):
 
 class Agent:
     def __init__(self, n_actions, input_dims, gamma=0.99, alpha=0.0003, gae_lambda=0.95,
-            policy_clip=0.2, batch_size=64, n_epochs=10, entropy_coeff=0.05):
+            policy_clip=0.2, batch_size=64, n_epochs=10, entropy_coeff=0.02):
         self.gamma = gamma
         self.policy_clip = policy_clip
         self.n_epochs = n_epochs
         self.gae_lambda = gae_lambda
         self.entropy_coeff = entropy_coeff
-        self.learning_trigger = 200  # Define the threshold to trigger learning
+        self.learning_trigger = 100
 
         self.actor = ActorNetwork(n_actions, input_dims, alpha)
         self.critic = CriticNetwork(input_dims, alpha)

@@ -6,6 +6,7 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import racetrackVizModel from '../../../models/racetrack/racetrackViz.glb';
 import racetrackRaysModel from '../../../models/racetrack/racetrackRays.glb';
 import racetrackCollisionModel from '../../../models/racetrack/racetrack.glb';
+import { collapseTextChangeRangesAcrossMultipleVersions } from 'typescript';
 
 export default class PlaygroundSection {
     constructor(_options) {
@@ -43,7 +44,7 @@ export default class PlaygroundSection {
         this.container.matrixAutoUpdate = false;
         this.setupLighting();
         this.loadRacetrack();
-        //this.addLinePathFromPoints();
+        // this.addLinePathFromPoints();
 
         // Main tick function / Event loop
         this.setTickFunction();
@@ -54,9 +55,6 @@ export default class PlaygroundSection {
         this.gameInProgress = false;
         this.gameStartTime = null;
         this.countDownInProgress = false;
-        
-        // const touchStartEvent = new Event('touchstart');
-        // window.dispatchEvent(touchStartEvent);
 
         this.physics.world.gravity.set(0, 0, fjcConfig.gravityZ);
 
@@ -100,13 +98,16 @@ export default class PlaygroundSection {
         normalizedState.percentOfTrackCompleted = this.percentOfTrackCompleted / 100;
 
         // Angle of the car in x-y plane (direction car is pointing) | Normalized to ~ [0, 1]
-        normalizedState.carAngle = (this.physics.car.angle + Math.PI) / (2 * Math.PI);
+        // normalizedState.carAngle = (this.physics.car.angle + Math.PI) / (2 * Math.PI);
 
         // Angle z of the car (tilt of the car) |  Normalized to ~ [0, 1]
-        normalizedState.carAngleZ = (this.physics.car.pitchAngle / 90)
+        // normalizedState.carAngleZ = (this.physics.car.pitchAngle / 90)
     
         // Speed of the car | Normalized to ~[0, 1]
-        normalizedState.carSpeed = this.physics.car.speed * 10
+        // normalizedState.carSpeed = this.physics.car.speed * 10
+
+        normalizedState.left = this.physics.controls.actions.left;
+        normalizedState.right = this.physics.controls.actions.right;
     
         // Ray lengths | Normalized to [0, 1]
         const maxRayLength = 20;
@@ -114,18 +115,13 @@ export default class PlaygroundSection {
         normalizedState.rayLengthRight = Math.min(this.rayLinesLengths.right, maxRayLength) / maxRayLength;
         normalizedState.rayLengthForward = Math.min(this.rayLinesLengths.forward, maxRayLength) / maxRayLength;
         normalizedState.rayLengthForwardLeft1 = Math.min(this.rayLinesLengths.forwardLeft1, maxRayLength) / maxRayLength;
-        normalizedState.rayLengthForwardLeft2 = Math.min(this.rayLinesLengths.forwardLeft2, maxRayLength) / maxRayLength;
+        // normalizedState.rayLengthForwardLeft2 = Math.min(this.rayLinesLengths.forwardLeft2, maxRayLength) / maxRayLength;
         normalizedState.rayLengthForwardRight1 = Math.min(this.rayLinesLengths.forwardRight1, maxRayLength) / maxRayLength;
-        normalizedState.rayLengthForwardRight2 = Math.min(this.rayLinesLengths.forwardRight2, maxRayLength) / maxRayLength;
+        // normalizedState.rayLengthForwardRight2 = Math.min(this.rayLinesLengths.forwardRight2, maxRayLength) / maxRayLength;
 
-        // Downward ray length | Normalized to 0 or 1, 1 when car is in the air
-        const maxDownwardRayLength = 5;
-        const normalizedLen = Math.min(this.rayLinesLengths.downward, maxDownwardRayLength) / maxDownwardRayLength;
-        if (normalizedLen > 0.15) {
-            normalizedState.rayLengthDownward = 1;
-        } else {
-            normalizedState.rayLengthDownward = 0;
-        }
+        // Downward ray length | Normalized to [0, 1]
+        // const maxDownwardRayLength = 5;
+        // normalizedState.rayLengthDown = Math.min(this.rayLinesLengths.downward, maxDownwardRayLength) / maxDownwardRayLength;
 
         return normalizedState;
     }
@@ -158,7 +154,8 @@ export default class PlaygroundSection {
             agent_id: this.agentId,
             observation: currentState,
             done: gameOver,
-            win: win
+            win: win,
+            time: Date.now() - this.gameStartTime
         };
         if (gameOver) {
             console.log("Game over. Data from get_action: ", dataToSend);
@@ -182,18 +179,14 @@ export default class PlaygroundSection {
                 this.resetGame();
                 this.checkUnpause();  // Begin periodic checks for unpause.
             } else {
+                if (this.percentOfTrackCompleted > 61.5 && this.percentOfTrackCompleted < 64.5) {
+                    this.physics.controls.actions.left = false;
+                    this.physics.controls.actions.right = false;
+                    return;
+                }
                 this.actionList.forEach((action) => {
                     this.physics.controls.actions[action] = data.action[action];
                 });
-                // Check for auto boost zone
-                // Ramp starts at 13% and ends at 14.5%
-                // We are in the air from 14.5% to 18%
-                // Landing ramp starts at 18
-                if (this.percentOfTrackCompleted > 12 && this.percentOfTrackCompleted < 16) {
-                    this.physics.controls.actions.up = true;
-                    this.physics.controls.actions.boost = true;
-                    return;
-                }
             }
         })
         .catch(error => console.error('Error calling API:', error));
@@ -317,18 +310,6 @@ export default class PlaygroundSection {
             return;
         }
         const state = this.getState();
-
-        // // Activate the joystick
-        // this.physics.controls.touch.joystick.active = true;
-
-        // // Retrieve the center values
-        // let centerX = this.physics.controls.touch.joystick.angle.center.x;
-        // let centerY = this.physics.controls.touch.joystick.angle.center.y;
-
-        // // Set the current values relative to the center
-        // this.physics.controls.touch.joystick.angle.value = 0;
-
-
     }
 
     /*
@@ -508,11 +489,12 @@ export default class PlaygroundSection {
     }
 
     loadRacetrack() {
+        const loader0 = new GLTFLoader();
         const loader1 = new GLTFLoader();
         const loader2 = new GLTFLoader();
 
         // This is just for visualization
-        // loader.load(racetrackVizModel, (gltf) => {
+        // loader0.load(racetrackVizModel, (gltf) => {
         //     const model = gltf.scene;
         //     this.container.add(model);
         // });

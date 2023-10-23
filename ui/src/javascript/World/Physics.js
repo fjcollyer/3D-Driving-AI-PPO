@@ -200,7 +200,7 @@ export default class Physics
 
             this.car.chassis.body.sleep()
             this.car.chassis.body.addShape(this.car.chassis.shape, this.car.options.chassisOffset)
-            this.car.chassis.body.quaternion.setFromAxisAngle(new CANNON.Vec3(0, 0, 1), - Math.PI * 0.5)
+            this.car.chassis.body.quaternion.setFromAxisAngle(new CANNON.Vec3(0, 0, Math.PI), Math.PI)
 
             /**
              * Sound

@@ -9,15 +9,16 @@ app = Flask(__name__)
 CORS(app)
 
 action_space = 3  # Adjusted to fit the 3 action space
-state_space = 12
+state_space = 8
+
 model = Agent(n_actions=action_space, input_dims=[state_space])  # Initialize the PPO agent
 
 # Struct to keep track of agent-specific data
 agent_data = {}
 is_training = False
+train_frequency = 20  # Train every 20 games
 
 """Logging code"""
-plot_frequency = 100
 total_completed_games = 0
 averages_array = []
 completed_games = 0
@@ -34,6 +35,7 @@ def get_action():
     observation = np.array(list(data['observation'].values()))
     done = data['done']
     win = data['win']
+    time = data['time']
 
     # Initialize agent's data if not existing
     if agent_id not in agent_data:
@@ -47,7 +49,7 @@ def get_action():
 
     # Store training data from previous observation/action
     if current_agent["last_state"] is not None:
-        reward = calculateReward(current_agent["last_state"], observation, done, win)
+        reward = calculateReward(current_agent["last_state"], observation, done, win, time)
         model.remember(current_agent["last_state"], current_agent["last_action"], 
                        current_agent["last_probs"], current_agent["last_value"], 
                        reward, done)
@@ -89,17 +91,17 @@ def check_unpause():
     if all([data["paused"] for data in agent_data.values()]) and not is_training:
         is_training = True
         print("Training started")
+        did_train = False
 
-        """Logging code"""
-        if completed_games >= plot_frequency:
+        if completed_games >= train_frequency:
             print("Plotting statistics")
             plot_statistics()
+            did_train = model.learn()
         else:
-            print(f"Not enough games completed for plotting ({completed_games}/{plot_frequency})")
-        """End of logging code"""
+            print(f"Not enough games completed for training ({completed_games}/{train_frequency})")
 
         # Train using PPO
-        did_train = model.learn()
+        # did_train = model.learn()
 
         for data in agent_data.values():
             data["paused"] = False
@@ -114,15 +116,29 @@ def check_unpause():
     return jsonify({"unpause": False})
 
 """ Utility functions """
-def calculateReward(last_state, observation, done, win):
+def calculateReward(last_state, observation, done, win, time):
+    TIME_PENALTY_FACTOR = 0.002
+    # Base rewards for game completion outcomes
     if win:
-        return 1
+        return 100  # Reward for winning the game
     if done and not win:
-        return -1
+        return -100  # Penalty for losing the game
+
+    progress_reward = 0
     
-    # This is the difference in the % of the game completed
-    reward = (observation[0] - last_state[0]) * 10
-    return reward
+    # Check if the agent has crossed a 5% boundary
+    last_progress = int(last_state[0] * 20)  # Convert to one of 0,1,2,...,20
+    current_progress = int(observation[0] * 20)
+    
+    if current_progress > last_progress:
+        progress_reward = 10  # Reward for every 5% of the game completed
+        # Time penalty
+        time_penalty = (time * TIME_PENALTY_FACTOR) / current_progress
+        # Combine rewards and penalties
+        reward = progress_reward - time_penalty
+        return reward
+    else:
+        return 0  # No reward if the agent has not progressed 
 
 # Utility function to convert action index to action dictionary.
 def get_action_dict(action_index):
@@ -163,7 +179,7 @@ def plot_statistics():
 
     # Extract data for plotting
     rewards, percentages = zip(*averages_array)
-    games = [i * plot_frequency for i in range(1, len(averages_array) + 1)]
+    games = [i * train_frequency for i in range(1, len(averages_array) + 1)]
 
     # Create the plot
     fig, ax1 = plt.subplots()
