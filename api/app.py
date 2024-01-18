@@ -9,9 +9,10 @@ app = Flask(__name__)
 CORS(app)
 
 action_space = 3  # Adjusted to fit the 3 action space
-state_space = 8
+state_space = 11
 
-model = Agent(n_actions=action_space, input_dims=[state_space])  # Initialize the PPO agent
+model = Agent(n_actions=action_space, input_dims=[
+              state_space])  # Initialize the PPO agent
 
 # Struct to keep track of agent-specific data
 agent_data = {}
@@ -25,6 +26,7 @@ completed_games = 0
 total_percentage_completed = 0
 total_reward = 0
 """End of logging code"""
+
 
 @app.route('/get_action', methods=['POST'])
 def get_action():
@@ -49,9 +51,10 @@ def get_action():
 
     # Store training data from previous observation/action
     if current_agent["last_state"] is not None:
-        reward = calculateReward(current_agent["last_state"], observation, done, win, time)
-        model.remember(current_agent["last_state"], current_agent["last_action"], 
-                       current_agent["last_probs"], current_agent["last_value"], 
+        reward = calculateReward(
+            current_agent["last_state"], observation, done, win, time)
+        model.remember(current_agent["last_state"], current_agent["last_action"],
+                       current_agent["last_probs"], current_agent["last_value"],
                        reward, done)
 
         """Logging code"""
@@ -83,6 +86,7 @@ def get_action():
     else:
         return jsonify({"action": get_action_dict(action), "pause": False})
 
+
 @app.route('/check_unpause', methods=['GET'])
 def check_unpause():
     global is_training, completed_games
@@ -98,7 +102,8 @@ def check_unpause():
             plot_statistics()
             did_train = model.learn()
         else:
-            print(f"Not enough games completed for training ({completed_games}/{train_frequency})")
+            print(
+                f"Not enough games completed for training ({completed_games}/{train_frequency})")
 
         # Train using PPO
         # did_train = model.learn()
@@ -115,32 +120,48 @@ def check_unpause():
 
     return jsonify({"unpause": False})
 
-""" Utility functions """
-def calculateReward(last_state, observation, done, win, time):
-    TIME_PENALTY_FACTOR = 0.002
-    # Base rewards for game completion outcomes
-    if win:
-        return 100  # Reward for winning the game
-    if done and not win:
-        return -100  # Penalty for losing the game
 
-    progress_reward = 0
-    
-    # Check if the agent has crossed a 5% boundary
-    last_progress = int(last_state[0] * 20)  # Convert to one of 0,1,2,...,20
-    current_progress = int(observation[0] * 20)
-    
-    if current_progress > last_progress:
-        progress_reward = 10  # Reward for every 5% of the game completed
-        # Time penalty
-        time_penalty = (time * TIME_PENALTY_FACTOR) / current_progress
-        # Combine rewards and penalties
-        reward = progress_reward - time_penalty
-        return reward
-    else:
-        return 0  # No reward if the agent has not progressed 
+""" Utility functions """
+
+
+# Loss gets -1, anything else is based on % completed difference
+def calculateReward(last_state, observation, done, win, time):
+    if done and not win:
+        return -1  # Penalty for losing the game
+
+    percent_completed = observation[0] * 100
+    last_percent_completed = last_state[0] * 100
+    difference = percent_completed - last_percent_completed
+    return difference
+
+
+# def calculateReward(last_state, observation, done, win, time):
+#     TIME_PENALTY_FACTOR = 0.002
+#     # Base rewards for game completion outcomes
+#     if win:
+#         return 100  # Reward for winning the game
+#     if done and not win:
+#         return -100  # Penalty for losing the game
+
+#     progress_reward = 0
+
+#     # Check if the agent has crossed a 5% boundary
+#     last_progress = int(last_state[0] * 20)  # Convert to one of 0,1,2,...,20
+#     current_progress = int(observation[0] * 20)
+
+#     if current_progress > last_progress:
+#         progress_reward = 10  # Reward for every 5% of the game completed
+#         # Time penalty
+#         time_penalty = (time * TIME_PENALTY_FACTOR) / current_progress
+#         # Combine rewards and penalties
+#         reward = progress_reward - time_penalty
+#         return reward
+#     else:
+#         return 0  # No reward if the agent has not progressed
 
 # Utility function to convert action index to action dictionary.
+
+
 def get_action_dict(action_index):
     action_mappings = {
         0: {"up": True},
@@ -159,8 +180,11 @@ def get_action_dict(action_index):
 
     return action_dict
 
+
 """Logging code"""
 # Plot statistics and save to ./statistics.png
+
+
 def plot_statistics():
     global averages_array, completed_games, total_percentage_completed, total_reward
     print("Plotting statistics")
@@ -199,6 +223,8 @@ def plot_statistics():
     fig.tight_layout()
     plt.savefig('./statistics.png')
     plt.close()
+
+
 """End of logging code"""
 
 if __name__ == '__main__':

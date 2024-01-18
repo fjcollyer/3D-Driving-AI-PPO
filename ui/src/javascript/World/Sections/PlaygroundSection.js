@@ -5,7 +5,7 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 
 import racetrackVizModel from '../../../models/racetrack/racetrackViz.glb';
 import racetrackRaysModel from '../../../models/racetrack/racetrackRays.glb';
-import racetrackCollisionModel from '../../../models/racetrack/racetrack.glb';
+import racetrackCollisionModel from '../../../models/racetrack/racetrack-physics.glb';
 import { collapseTextChangeRangesAcrossMultipleVersions } from 'typescript';
 
 export default class PlaygroundSection {
@@ -38,6 +38,8 @@ export default class PlaygroundSection {
 
         // Game logic setup
         this.resetGame();
+        this.defaultMaxSpeed = this.physics.car.options.controlsAcceleratinMaxSpeed;
+        console.log("Default max speed: ", this.defaultMaxSpeed);
 
         // UI setup
         this.container = new THREE.Object3D();
@@ -90,10 +92,10 @@ export default class PlaygroundSection {
         this.physics.controls.actions.brake = false;
         this.physics.controls.actions.boost = false;
     }
-    
+
     getState() {
         let normalizedState = {};
-    
+
         // Percent of the track completed | Normalized to [0, 1]
         normalizedState.percentOfTrackCompleted = this.percentOfTrackCompleted / 100;
 
@@ -102,22 +104,22 @@ export default class PlaygroundSection {
 
         // Angle z of the car (tilt of the car) |  Normalized to ~ [0, 1]
         // normalizedState.carAngleZ = (this.physics.car.pitchAngle / 90)
-    
+
         // Speed of the car | Normalized to ~[0, 1]
-        // normalizedState.carSpeed = this.physics.car.speed * 10
+        normalizedState.carSpeed = this.physics.car.speed * 10
 
         normalizedState.left = this.physics.controls.actions.left;
         normalizedState.right = this.physics.controls.actions.right;
-    
+
         // Ray lengths | Normalized to [0, 1]
         const maxRayLength = 20;
         normalizedState.rayLengthLeft = Math.min(this.rayLinesLengths.left, maxRayLength) / maxRayLength;
         normalizedState.rayLengthRight = Math.min(this.rayLinesLengths.right, maxRayLength) / maxRayLength;
         normalizedState.rayLengthForward = Math.min(this.rayLinesLengths.forward, maxRayLength) / maxRayLength;
         normalizedState.rayLengthForwardLeft1 = Math.min(this.rayLinesLengths.forwardLeft1, maxRayLength) / maxRayLength;
-        // normalizedState.rayLengthForwardLeft2 = Math.min(this.rayLinesLengths.forwardLeft2, maxRayLength) / maxRayLength;
+        normalizedState.rayLengthForwardLeft2 = Math.min(this.rayLinesLengths.forwardLeft2, maxRayLength) / maxRayLength;
         normalizedState.rayLengthForwardRight1 = Math.min(this.rayLinesLengths.forwardRight1, maxRayLength) / maxRayLength;
-        // normalizedState.rayLengthForwardRight2 = Math.min(this.rayLinesLengths.forwardRight2, maxRayLength) / maxRayLength;
+        normalizedState.rayLengthForwardRight2 = Math.min(this.rayLinesLengths.forwardRight2, maxRayLength) / maxRayLength;
 
         // Downward ray length | Normalized to [0, 1]
         // const maxDownwardRayLength = 5;
@@ -131,16 +133,16 @@ export default class PlaygroundSection {
         if (this.gamePaused) {
             console.log("Checking if game should unpause");
             fetch(`http://localhost:5001/check_unpause?agent_id=${this.agentId}`)
-            .then(response => response.json())
-            .then(data => {
-                if (data.unpause) {
-                    console.log("Unpausing game. Data from check_unpause: ", data);
-                    this.gamePaused = false;
-                } else {
-                    setTimeout(() => this.checkUnpause(), 500);  // Use arrow function to retain this context.
-                }
-            })
-            .catch(error => console.error('Unpause check error:', error));
+                .then(response => response.json())
+                .then(data => {
+                    if (data.unpause) {
+                        console.log("Unpausing game. Data from check_unpause: ", data);
+                        this.gamePaused = false;
+                    } else {
+                        setTimeout(() => this.checkUnpause(), 500);  // Use arrow function to retain this context.
+                    }
+                })
+                .catch(error => console.error('Unpause check error:', error));
         }
     }
 
@@ -163,33 +165,28 @@ export default class PlaygroundSection {
 
         fetch('http://localhost:5001/get_action', {
             method: 'POST',
-            headers: {'Content-Type': 'application/json'},
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(dataToSend)
         })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error(`HTTP error from /get_action: ${response.status} ${response.statusText}`);
-            }
-            return response.json();
-        })
-        .then(data => {
-            if (data.pause) {
-                console.log("Pausing game. Data from get_action: ", data);
-                this.gamePaused = true;
-                this.resetGame();
-                this.checkUnpause();  // Begin periodic checks for unpause.
-            } else {
-                if (this.percentOfTrackCompleted > 61.5 && this.percentOfTrackCompleted < 64.5) {
-                    this.physics.controls.actions.left = false;
-                    this.physics.controls.actions.right = false;
-                    return;
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error from /get_action: ${response.status} ${response.statusText}`);
                 }
-                this.actionList.forEach((action) => {
-                    this.physics.controls.actions[action] = data.action[action];
-                });
-            }
-        })
-        .catch(error => console.error('Error calling API:', error));
+                return response.json();
+            })
+            .then(data => {
+                if (data.pause) {
+                    console.log("Pausing game. Data from get_action: ", data);
+                    this.gamePaused = true;
+                    this.resetGame();
+                    this.checkUnpause();  // Begin periodic checks for unpause.
+                } else {
+                    this.actionList.forEach((action) => {
+                        this.physics.controls.actions[action] = data.action[action];
+                    });
+                }
+            })
+            .catch(error => console.error('Error calling API:', error));
     }
 
 
@@ -226,7 +223,7 @@ export default class PlaygroundSection {
             return;
         }
         // Check for death by staying still
-        if (this.physics.car.speed < 0.001 && (Date.now() - this.gameStartTime) > 5000)  { // ms
+        if (this.physics.car.speed < 0.001 && (Date.now() - this.gameStartTime) > 5000) { // ms
             this.makeAiDecision(currentState, true, false);
             this.resetGame();
             return;
@@ -237,7 +234,7 @@ export default class PlaygroundSection {
             this.makeAiDecision(currentState, false, false);
             this.tickCount = 0;
         }
-    }  
+    }
 
     setTickFunction() {
         this.time.on('tick', () => {
@@ -282,13 +279,21 @@ export default class PlaygroundSection {
                     this.gameInProgress = true;
                     this.countDownInProgress = false;
                     this.gameStartTime = Date.now();
-                } , 1000);
+                }, 1000);
                 return;
             }
 
             // In game logic
             if (this.gameInProgress) {
                 this.updateHtml();
+
+                // Increase gravity when the car goes down the ramp
+                // if (this.percentOfTrackCompleted > 55 && this.percentOfTrackCompleted < 63) {
+                //     // change the gravity
+                //     this.physics.world.gravity.set(0, 0, -20);
+                // } else {
+                //     this.physics.world.gravity.set(0, 0, fjcConfig.gravityZ);
+                // }
 
                 // AI logic
                 if (this.aiModeActive && this.gameInProgress) {
@@ -321,13 +326,13 @@ export default class PlaygroundSection {
             console.log("Racetrack models not loaded yet");
             return;
         }
-    
+
         // Initialize rayLines and rayLinesLengths if they don't exist
         if (!this.rayLines) {
             this.rayLines = {};
             this.rayLinesLengths = {};
         }
-    
+
         const directions = {
             left: new THREE.Vector3(0, 1, 0), // Pointing upwards
             right: new THREE.Vector3(0, -1, 0), // Pointing downwards
@@ -338,33 +343,33 @@ export default class PlaygroundSection {
             forwardRight2: new THREE.Vector3(Math.sqrt(2) / 2, -Math.sqrt(2) / 2, 0), // -45 degrees
             downward: new THREE.Vector3(0, 0, -1)  // Pointing straight down in the z direction
         };
-    
+
         const carPosition = new THREE.Vector3(carPosX, carPosY, carPosZ);
         // Car angle is already in radians
         const rotationMatrix = new THREE.Matrix4().makeRotationZ(carAngle);
-    
+
         Object.keys(directions).forEach((key) => {
             const direction = directions[key];
             const rotatedDirection = direction.clone().applyMatrix4(rotationMatrix);
-    
+
             const rayOrigin = carPosition;
-    
+
             const ray = new THREE.Raycaster(rayOrigin, rotatedDirection.normalize());
-    
+
             let intersections;
             if (key === 'downward') {
                 intersections = ray.intersectObject(this.racetrackDownRayModel, true);  // Intersect with the racetrackDownRay model
             } else {
                 intersections = ray.intersectObject(this.racetrackRaysModel, true);  // Intersect with the racetrackRays model
             }
-    
+
             let endPoint;
             if (intersections.length > 0) {
                 endPoint = intersections[0].point;
             } else {
                 endPoint = rayOrigin.clone().add(rotatedDirection.multiplyScalar(1000));
             }
-    
+
             // If ray line for key doesn't exist, create it
             if (!this.rayLines[key]) {
                 const material = new THREE.LineBasicMaterial({ color: this.getColorForKey(key) });
@@ -375,11 +380,11 @@ export default class PlaygroundSection {
                 // If ray line for key already exists, update it
                 this.rayLines[key].geometry.setFromPoints([rayOrigin, endPoint]);
             }
-    
+
             this.rayLinesLengths[key] = endPoint.distanceTo(rayOrigin);
         });
-    }    
-    
+    }
+
     getColorForKey(key) {
         const colors = {
             left: 0xff0000,
@@ -391,46 +396,46 @@ export default class PlaygroundSection {
             forwardRight2: 0xff00ff,
             downward: 0x00ffff
         };
-    
+
         return colors[key];
-    }     
+    }
 
     getClosestPointOnLineSegments(carX, carY, carZ, lastSegmentIndex) {
         let minDistance = Infinity;
         let closestPoint = null;
         let segmentIndex = null;
-    
+
         const points = Object.values(fjcConfig.pointsForLine);
-    
+
         // Clamp the segment indices to the range [0, points.length - 2]
         const startIdx = Math.max(0, lastSegmentIndex - 1);
         const endIdx = Math.min(points.length - 2, lastSegmentIndex + 1);
-    
+
         for (let i = startIdx; i <= endIdx; i++) {
             const start = new THREE.Vector3(points[i].x, points[i].y, points[i].z);
             const end = new THREE.Vector3(points[i + 1].x, points[i + 1].y, points[i + 1].z);
             const carPoint = new THREE.Vector3(carX, carY, carZ);
-    
+
             const closest = new THREE.Vector3();
-    
+
             // Find closest point on the line segment defined by start and end to the point
             closest.subVectors(end, start)
                 .multiplyScalar(
                     ((carPoint.x - start.x) * (end.x - start.x) +
-                     (carPoint.y - start.y) * (end.y - start.y) +
-                     (carPoint.z - start.z) * (end.z - start.z)) /
+                        (carPoint.y - start.y) * (end.y - start.y) +
+                        (carPoint.z - start.z) * (end.z - start.z)) /
                     start.distanceToSquared(end)
                 )
                 .add(start);
-    
+
             // Clamp the closest point to the line segment
             const t = closest.clone().sub(start).dot(end.clone().sub(start)) / start.distanceToSquared(end);
             if (t < 0.0) closest.copy(start);
             else if (t > 1.0) closest.copy(end);
-    
+
             // Calculate the distance to the closest point on the segment
             const distance = closest.distanceTo(carPoint);
-    
+
             // Update the minimum distance and closest point and segment index
             if (distance < minDistance) {
                 minDistance = distance;
@@ -438,32 +443,32 @@ export default class PlaygroundSection {
                 segmentIndex = i;
             }
         }
-    
+
         return { closestPoint, minDistance, segmentIndex };
     }
 
     calculateTrackCompletedPercent(segmentIndex, closestPoint) {
         const points = Object.values(fjcConfig.pointsForLine);
         let completedDistance = 0;
-    
+
         for (let i = 0; i < segmentIndex; i++) {
             const start = new THREE.Vector3(points[i].x, points[i].y, points[i].z);
             const end = new THREE.Vector3(points[i + 1].x, points[i + 1].y, points[i + 1].z);
             completedDistance += start.distanceTo(end);
         }
-    
+
         const startOfSegment = new THREE.Vector3(points[segmentIndex].x, points[segmentIndex].y, points[segmentIndex].z);
         completedDistance += startOfSegment.distanceTo(closestPoint);
-    
+
         let totalTrackLength = 0;
         for (let i = 0; i < points.length - 1; i++) {
             const start = new THREE.Vector3(points[i].x, points[i].y, points[i].z);
             const end = new THREE.Vector3(points[i + 1].x, points[i + 1].y, points[i + 1].z);
             totalTrackLength += start.distanceTo(end);
         }
-    
+
         return (completedDistance / totalTrackLength) * 100;
-    }  
+    }
 
     /*
     *  UI functions
@@ -481,7 +486,7 @@ export default class PlaygroundSection {
         document.querySelector('.fjc-threejs-journey').removeAttribute('hidden');
         document.querySelector('.threejs-journey.js-threejs-journey').removeAttribute('hidden');
 
-    }   
+    }
 
     setupLighting() {
         const ambientLight = new THREE.AmbientLight(0xffffff, 5);
@@ -493,45 +498,45 @@ export default class PlaygroundSection {
         const loader1 = new GLTFLoader();
         const loader2 = new GLTFLoader();
 
-        // This is just for visualization
+        // Used for: Visual: True, Collision: False, Raycasting: False
         // loader0.load(racetrackVizModel, (gltf) => {
         //     const model = gltf.scene;
         //     this.container.add(model);
         // });
 
-        // This is just for raycasting
+        // Used for: Visual: False, Collision: False, Raycasting: False
         loader1.load(racetrackRaysModel, (gltf) => {
             const model = gltf.scene;
-            model.visible = false; // Set visible to false
+            model.visible = false;
             this.racetrackRaysModel = model;
             this.container.add(model);
         });
 
-        // This is just for raycasting of the downward ray
+        // Used for: Visual: False, Collision: False, Raycasting: True
         loader2.load(racetrackCollisionModel, (gltf) => {
             const model = gltf.scene;
-            model.visible = false; // Set visible to false
+            model.visible = false;
             this.racetrackDownRayModel = model;
             this.container.add(model);
         });
 
-        // This is for collisions
+        // Used for: Visual: True (base is visable, in prod we will have an empty file for base so its not visable), Collision: True, Raycasting: False
         this.objects.add({
-            //base: this.resources.items.racetrackEmpty.scene, // Empty glb file (has one tiny mesh in it)
-            base: this.resources.items.racetrack.scene, // Empty glb file (has one tiny mesh in it)
-            collision: this.resources.items.racetrack.scene, // This is the mesh that will be used for collision
+            // base: this.resources.items.racetrackEmpty.scene,
+            base: this.resources.items.racetrackPhysics.scene,
+            collision: this.resources.items.racetrackPhysics.scene,
             floorShadowTexture: null,
             offset: new THREE.Vector3(this.x, this.y, 0),
-            mass: 0 // Static object
+            mass: 0 // 0 = static/fixed object
         });
     }
 
     addLinePathFromPoints() {
         const pointsForLine = fjcConfig.pointsForLine;
-        
+
         const lineMaterial = new THREE.LineBasicMaterial({ color: 0x0000ff }); // blue color for central line
         const sphereMaterial = new THREE.MeshBasicMaterial({ color: 0xffff00 }); // yellow color for spheres
-        
+
         // Function to create spheres and line from points
         const createSpheresAndLine = (pointsForLine, sphereMaterial, lineMaterial) => {
             const points = [];
@@ -540,7 +545,7 @@ export default class PlaygroundSection {
                     const pointConfig = pointsForLine[key];
                     const point = new THREE.Vector3(pointConfig.x, pointConfig.y, pointConfig.z);
                     points.push(point);
-        
+
                     // Create Spheres
                     const sphereGeometry = new THREE.SphereGeometry(0.5, 32, 32);
                     const sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
@@ -548,7 +553,7 @@ export default class PlaygroundSection {
                     this.container.add(sphere);
                 }
             }
-            
+
             // Create Line
             const geometry = new THREE.BufferGeometry().setFromPoints(points);
             const line = new THREE.Line(geometry, lineMaterial);
@@ -556,5 +561,5 @@ export default class PlaygroundSection {
         }
         createSpheresAndLine(pointsForLine, sphereMaterial, lineMaterial);
     }
-    
+
 }
