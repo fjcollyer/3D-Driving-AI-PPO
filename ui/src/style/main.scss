@@ -85,6 +85,22 @@ a {
     padding-right: 2rem;
 }
 
+.popup-container {
+    position: fixed;
+    top: 30%;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: -10;
+    background-color: hsl(120, 100%, 75%);
+    border-radius: 10px;
+    padding: 10px 20px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    opacity: 0;
+    transition: opacity 500ms;
+    display: none;
+    /* Start hidden */
+}
+
 /*=============== HEADER ===============*/
 .header {
     position: fixed;
@@ -208,10 +224,6 @@ a {
     justify-content: space-between;
     align-items: center;
     transition: background-color 0.3s;
-}
-
-.nav__link:hover {
-    background-color: var(--first-color-lighten);
 }
 
 /* Show menu */
@@ -428,10 +440,6 @@ a {
     padding: 0;
 }
 
-.nav__link:hover {
-    background-color: initial;
-}
-
 .dropdown__container {
     height: max-content;
     position: absolute;
@@ -445,16 +453,32 @@ a {
     transition: top var(--dropdown-transition), opacity 0.3s;
 }
 
-.dropdown__item:hover .dropdown__arrow {
+.dropdown__arrow.open {
     transform: rotate(180deg);
 }
 
-.dropdown__item:hover>.dropdown__container {
+// This causes the dropdown to appear when the dropdown item is hovered
+// .dropdown__item:hover>.
+
+.dropdown__container {
     opacity: 1;
     top: calc(var(--header-height) + 0.5rem);
     pointer-events: initial;
     cursor: initial;
 }
+
+/* This class will be added by JS to hide the dropdown */
+/* Adjust the hidden class to transition the dropdown downwards instead of upwards */
+.dropdown__container.hidden {
+    opacity: 0 !important;
+    /* Ensure opacity fades out */
+    /* Instead of setting top to 0, set it to a value that makes it move downwards */
+    top: 7rem !important;
+    /* Example value, adjust based on your layout */
+    pointer-events: none !important;
+    /* Make it non-interactive */
+}
+
 
 /* Turning button styling to various shades of green for illustration */
 .button {

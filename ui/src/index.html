@@ -51,6 +51,11 @@
     <header class="header" hidden>
         <nav class="nav container">
 
+            <!--=============== POP UP ON MODE CHANGE ===============-->
+            <div class="popup-container" id="popup-container">
+                <p class="nav__link" id="popup-text">You will lose your current progress</p>
+            </div>
+
             <div class="nav-right-div">
                 <img src="/cybertruck.svg" alt="Cybertruck" class="my-logo" />
             </div>
@@ -59,13 +64,13 @@
             <div class="nav__menu" id="nav-menu">
                 <ul class="nav__list">
                     <!--=============== DROPDOWN 1 ===============-->
-                    <li class="dropdown__item">
-                        <div class="nav__link dropdown__button">
-                            Mode: <p id="mode-in-nav"></p>
+                    <li class="dropdown__item" id="mode-dropdown-item">
+                        <div class="nav__link dropdown__button" id="mode_nav_link">
+                            Mode:&nbsp;<p id="mode-in-nav"></p>
                             <i class="ri-arrow-down-s-line dropdown__arrow"></i>
                         </div>
 
-                        <div class="dropdown__container">
+                        <div class="dropdown__container hidden">
                             <div class="dropdown__content">
                                 <div class="human-mode-container">
                                     <h1 class="mode-title">
@@ -169,12 +174,12 @@
                     </li>
 
                     <!--=============== DROPDOWN 2 ===============-->
-                    <li class="dropdown__item">
-                        <div class="nav__link dropdown__button">
+                    <li class="dropdown__item" id="info-dropdown-item">
+                        <div class="nav__link dropdown__button" id="info_nav_link">
                             Project Info<i class="ri-arrow-down-s-line dropdown__arrow"></i>
                         </div>
 
-                        <div class="dropdown__container">
+                        <div class="dropdown__container hidden">
                             <div class="dropdown__content">
                                 <div class="info-container">
                                     <div class="info-left">

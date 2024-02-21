@@ -30,7 +30,7 @@ export default class Racetrack {
         // Set up HTML elements
         this.isMuted = false;
         this.muteByDefault = true;
-        this.selectedMode = "ai-button-3"; // Name the modes per the button IDs
+        this.currentMode = "ai-button-3"; // Name the modes per the button IDs
         this.setupHTML();
 
         // Tick logic
@@ -44,8 +44,6 @@ export default class Racetrack {
         this.toleranceDistanceRays = 0.8; // If any of the rays are shorter than this distance we consider the car to have fallen off the track
         this.racetrackRaysModel = null; // Used for raycasting, set in loadRacetrack()
         this.racetrackDownRayModel = null; // Used for raycasting, set in loadRacetrack()
-        this.path_to_tfjs_actor = "/tfjs_models/actor_1161/model.json"; // Used when not in training mode, this path is relative to the static folder in the Flask app
-        this.path_to_tfjs_critic = "/tfjs_models/critic_1161/model.json";
         this.call_frequency = 60 / 4;
 
         // Game logic setup
@@ -80,12 +78,30 @@ export default class Racetrack {
                 this.state_space = config.state_space;
                 this.action_mappings = config.action_mappings;
 
-                // Initialize PPOAgent with the fetched configuration
+                this.tfjs_model_paths = {
+                    beginner: {
+                        actor: config.path_to_tfjs_actor_beginner,
+                        critic: config.path_to_tfjs_critic_beginner
+                    },
+                    intermediate: {
+                        actor: config.path_to_tfjs_actor_intermediate,
+                        critic: config.path_to_tfjs_critic_intermediate
+                    },
+                    advanced: {
+                        actor: config.path_to_tfjs_actor_advanced,
+                        critic: config.path_to_tfjs_critic_advanced
+                    }
+                };
 
+                console.log("this.tfjs_model_paths: ", this.tfjs_model_paths);
+
+                // Initialize PPOAgent with the fetched configuration
                 if (this.training_mode) {
                     console.log("Training mode is enabled.");
                 } else {
-                    this.ppo_agent = new PPOAgent(this.path_to_tfjs_actor, this.path_to_tfjs_critic, this.actions_list, this.action_mappings, this.state_space);
+                    this.ppo_agent_beginner = new PPOAgent(this.tfjs_model_paths.beginner.actor, this.tfjs_model_paths.beginner.critic, this.actions_list, this.action_mappings, this.state_space);
+                    this.ppo_agent_intermediate = new PPOAgent(this.tfjs_model_paths.intermediate.actor, this.tfjs_model_paths.intermediate.critic, this.actions_list, this.action_mappings, this.state_space);
+                    this.ppo_agent_advanced = new PPOAgent(this.tfjs_model_paths.advanced.actor, this.tfjs_model_paths.advanced.critic, this.actions_list, this.action_mappings, this.state_space);
                 }
             })
             .catch(error => console.error("Error loading configuration:", error));
@@ -214,8 +230,22 @@ export default class Racetrack {
         // We simply send the current state to the AI and receive the action
         const startTime = Date.now();
 
-        this.ppo_agent.chooseAction(currentState).then(({ action, actionProbabilities, value }) => {
-            const actionDict = this.ppo_agent.getActionDict(action);
+        // console.log("this.currentMode: " + this.currentMode);
+
+        let currentAgent = null;
+        if (this.currentMode === "ai-button-1") {
+            currentAgent = this.ppo_agent_beginner;
+        } else if (this.currentMode === "ai-button-2") {
+            currentAgent = this.ppo_agent_intermediate;
+        } else if (this.currentMode === "ai-button-3") {
+            currentAgent = this.ppo_agent_advanced;
+        } else {
+            console.log("Error: currentMode not recognized");
+            console.log("currentMode = " + this.currentMode);
+        }
+
+        currentAgent.chooseAction(currentState).then(({ action, actionProbabilities, value }) => {
+            const actionDict = currentAgent.getActionDict(action);
 
             this.actions_list.forEach((action) => {
                 const responseTime = Date.now() - startTime;
@@ -351,12 +381,12 @@ export default class Racetrack {
 
             // Only start the tick function when the PPOAgent is initialized
             if (!this.training_mode) {
-                if (!this.ppo_agent) {
-                    console.log("PPOAgent not initialized yet");
+                if (!this.ppo_agent_beginner || !this.ppo_agent_intermediate || !this.ppo_agent_advanced) {
+                    console.log("PPOAgents not initialized yet");
                     return;
                 }
-                if (!this.ppo_agent.criticModel || !this.ppo_agent.actorModel) {
-                    console.log("PPOAgent criticModel or actorModel not loaded yet");
+                if (!this.ppo_agent_beginner.actorModel || !this.ppo_agent_beginner.criticModel || !this.ppo_agent_intermediate.actorModel || !this.ppo_agent_intermediate.criticModel || !this.ppo_agent_advanced.actorModel || !this.ppo_agent_advanced.criticModel) {
+                    console.log("PPOAgent criticModel or actorModel not loaded yet for one or more agents");
                     return;
                 }
             }
@@ -611,19 +641,6 @@ export default class Racetrack {
             header.style.opacity = 1;
         }, 10);
 
-        // Add event listeners for dropdown buttons
-        const dropdownButtons = document.querySelectorAll('.dropdown__item');
-        dropdownButtons.forEach(button => {
-            button.addEventListener('mouseenter', () => {
-                console.log("mouseenter");
-                header.classList.add('navbar-dropdown-open');
-            });
-            button.addEventListener('mouseleave', () => {
-                console.log("mouseleave");
-                header.classList.remove('navbar-dropdown-open');
-            });
-        });
-
         // Function to dispatch 'm' keydown event
         const emitMKeydown = () => {
             const event = new KeyboardEvent('keydown', {
@@ -704,6 +721,161 @@ export default class Racetrack {
             modeInNavText.textContent = text;
         }
 
+        function hideDropdown(targetDropdown) {
+            if (targetDropdown) {
+                targetDropdown.classList.add('hidden');
+                header.classList.remove('navbar-dropdown-open');
+                var dropdownArrow = targetDropdown.previousElementSibling.querySelector('.dropdown__arrow');
+                if (dropdownArrow) {
+                    dropdownArrow.classList.remove('open');
+                }
+                console.log("hideDropdown: ", targetDropdown);
+            } else {
+                console.error('hideDropdown: targetDropdown is not defined');
+            }
+        }
+
+        function hideAllDropdowns() {
+            var allDropdowns = document.querySelectorAll('.dropdown__container');
+            allDropdowns.forEach(function (dropdown) {
+                hideDropdown(dropdown); // Utilize the existing hideDropdown function
+            });
+        }
+
+        function hideOtherDropdowns(exceptDropdown) {
+            // Query all dropdown elements
+            var allDropdowns = document.querySelectorAll('.dropdown__container');
+            allDropdowns.forEach(function (dropdown) {
+                if (dropdown !== exceptDropdown) {
+                    dropdown.classList.add('hidden'); // Hide dropdown
+                    var dropdownArrow = dropdown.previousElementSibling.querySelector('.dropdown__arrow');
+                    if (dropdownArrow) {
+                        dropdownArrow.classList.remove('open'); // Adjust arrow state
+                    }
+                }
+            });
+        }
+
+        function showDropdown(targetDropdown) {
+            if (targetDropdown) {
+                hideOtherDropdowns(targetDropdown); // Hide other dropdowns first
+                targetDropdown.classList.remove('hidden');
+                header.classList.add('navbar-dropdown-open');
+                var dropdownArrow = targetDropdown.previousElementSibling.querySelector('.dropdown__arrow');
+                if (dropdownArrow) {
+                    dropdownArrow.classList.add('open');
+                }
+                console.log("showDropdown: ", targetDropdown);
+            } else {
+                console.error('showDropdown: targetDropdown is not defined');
+            }
+        }
+
+        document.addEventListener('click', function (event) {
+            var insideDropdown = event.target.closest('.dropdown__container');
+            var insideNavLink = event.target.closest('#mode_nav_link, #info_nav_link'); // Adjust selectors as necessary
+
+            // If the click is not inside a dropdown or nav link, hide all dropdowns
+            if (!insideDropdown && !insideNavLink) {
+                hideAllDropdowns();
+            }
+        });
+
+
+        document.getElementById('mode_nav_link').addEventListener('click', function () {
+            var dropdown = this.nextElementSibling;
+            if (dropdown.classList.contains('hidden')) {
+                showDropdown(dropdown);
+            } else {
+                hideDropdown(dropdown);
+            }
+        });
+        document.getElementById('info_nav_link').addEventListener('click', function () {
+            var dropdown = this.nextElementSibling;
+            if (dropdown.classList.contains('hidden')) {
+                showDropdown(dropdown);
+            } else {
+                hideDropdown(dropdown);
+            }
+        });
+
+        // Function to check for touch support
+        function isTouchDevice() {
+            return 'ontouchstart' in window || navigator.maxTouchPoints > 0 || navigator.msMaxTouchPoints > 0;
+        }
+
+        document.getElementById('mode-dropdown-item').addEventListener('mouseenter', function () {
+            if (isTouchDevice()) return; // Ignore hover on touch devices
+            var dropdown = this.querySelector('.dropdown__container'); // Select the dropdown container
+            showDropdown(dropdown);
+        });
+
+        document.getElementById('mode-dropdown-item').addEventListener('mouseleave', function () {
+            if (isTouchDevice()) return; // Ignore hover on touch devices
+            var dropdown = this.querySelector('.dropdown__container'); // Select the dropdown container
+            hideDropdown(dropdown);
+        });
+
+        document.getElementById('info-dropdown-item').addEventListener('mouseenter', function () {
+            if (isTouchDevice()) return; // Ignore hover on touch devices
+            var dropdown = this.querySelector('.dropdown__container'); // Select the dropdown container
+            showDropdown(dropdown);
+        });
+
+        document.getElementById('info-dropdown-item').addEventListener('mouseleave', function () {
+            if (isTouchDevice()) return; // Ignore hover on touch devices
+            var dropdown = this.querySelector('.dropdown__container'); // Select the dropdown container
+            hideDropdown(dropdown);
+        });
+
+
+        function displayNewModeMessage(mode) {
+            const popupContainer = document.getElementById('popup-container');
+            const popupText = document.getElementById('popup-text');
+
+            let modeText = "Mode: ";
+            if (mode === 'human-button') {
+                modeText += 'Human';
+            } else if (mode === 'ai-button-1') {
+                modeText += 'AI (Beginner)';
+            }
+            else if (mode === 'ai-button-2') {
+                modeText += 'AI (Intermediate)';
+            }
+            else if (mode === 'ai-button-3') {
+                modeText += 'AI (Advanced)';
+            }
+
+            // First, make sure the popup is hidden
+            popupContainer.style.opacity = '0';
+            popupContainer.style.display = 'none';
+
+            // Update the popup text
+            popupText.textContent = modeText;
+
+            // Show the popup container before fading in
+            popupContainer.style.display = 'block';
+
+            // Fade in
+            setTimeout(() => {
+                popupContainer.style.opacity = '1';
+            }, 0);
+
+            // Stay for 2s then fade out
+            setTimeout(() => {
+                if (popupText.textContent === modeText) { // Check if the text matches the current mode
+                    popupContainer.style.opacity = '0';
+
+                    // Hide the popup container after it fades out
+                    setTimeout(() => {
+                        if (popupText.textContent === modeText) { // Check again before hiding
+                            popupContainer.style.display = 'none';
+                        }
+                    }, 500); // Match the fade-out duration
+                }
+            }, 2500); // 500ms fade in + 2000ms stay
+        }
+
         buttonIds.forEach(buttonId => {
             const button = document.getElementById(buttonId);
             if (button) {
@@ -724,10 +896,26 @@ export default class Racetrack {
 
                 // Updated click event listener to manage the selection state and update text with animation
                 button.addEventListener('click', (event) => {
-                    event.preventDefault(); // This will prevent the default event action
+                    event.preventDefault();
+                    if (button.id === this.currentMode) {
+                        return;
+                    }
+                    this.currentMode = button.id;
+                    if (this.currentMode === "human-button") {
+                        this.aiModeActive = false;
+                        for (const action of this.actions_list) {
+                            this.physics.controls.actions[action] = false;
+                        }
+                        setTimeout(() => {
+                            for (const action of this.actions_list) {
+                                this.physics.controls.actions[action] = false;
+                            }
+                        }, 200);
+                    } else {
+                        this.aiModeActive = true;
+                    }
 
                     buttonIds.forEach(id => {
-                        this.currentMode = id;
                         const otherButton = document.getElementById(id);
                         if (otherButton !== button) {
                             otherButton.classList.remove('selected-button', 'in'); // Remove 'in' if it's not needed here
@@ -741,6 +929,10 @@ export default class Racetrack {
                     applyTextAnimation(button, 'Selected');
                     updateModeInNav(button.id);
 
+                    // Hide the dropdown
+                    const targetDropdown = button.closest('.dropdown__container');
+                    hideDropdown(targetDropdown);
+                    displayNewModeMessage(button.id);
                 });
             }
         });
@@ -748,7 +940,7 @@ export default class Racetrack {
         // Set the initial mode
         for (const id of buttonIds) {
             const button = document.getElementById(id);
-            if (button.id === this.selectedMode) {
+            if (button.id === this.currentMode) {
                 button.classList.add('selected-button');
                 button.classList.remove('non-selected-button');
                 applyTextAnimation(button, 'Selected');

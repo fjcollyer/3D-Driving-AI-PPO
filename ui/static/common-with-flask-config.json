@@ -1,7 +1,7 @@
 {
     "NOTE": "This JSON is used by both the UI and the Flask app. The Flask app will set the training_mode variable based on the flag passed when its started.",
     "flask_url": "http://localhost:8080",
-    "training_mode": true,
+    "training_mode": false,
     "actions_list": [
         "up",
         "left",
@@ -21,5 +21,11 @@
         }
     },
     "state_space": 11,
-    "action_space": 3
+    "action_space": 3,
+    "path_to_tfjs_actor_beginner": "/tfjs_models/actor_episodes_20",
+    "path_to_tfjs_critic_beginner": "/tfjs_models/critic_episodes_20",
+    "path_to_tfjs_actor_intermediate": "/tfjs_models/actor_episodes_80",
+    "path_to_tfjs_critic_intermediate": "/tfjs_models/critic_episodes_80",
+    "path_to_tfjs_actor_advanced": "/tfjs_models/actor_episodes_1161",
+    "path_to_tfjs_critic_advanced": "/tfjs_models/critic_episodes_1161"
 }

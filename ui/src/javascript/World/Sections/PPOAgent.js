@@ -2,8 +2,8 @@ import * as tf from '@tensorflow/tfjs';
 
 class PPOAgent {
   constructor(path_to_tfjs_actor, path_to_tfjs_critic, actions_list, action_mappings, state_space) {
-    this.path_to_tfjs_actor = path_to_tfjs_actor;
-    this.path_to_tfjs_critic = path_to_tfjs_critic;
+    this.path_to_tfjs_actor = path_to_tfjs_actor + '/model.json';
+    this.path_to_tfjs_critic = path_to_tfjs_critic + '/model.json';
     this.actions_list = actions_list;
     this.action_mappings = action_mappings;
     this.state_space = state_space;
@@ -40,6 +40,9 @@ class PPOAgent {
 
     // Clean up tensor to prevent memory leak
     tf.dispose(stateTensor);
+
+    // Log the path to the model
+    // console.log("path_to_tfjs_actor: " + this.path_to_tfjs_actor);
 
     return { action, actionProbabilities, value: valueData[0] };
   }
