@@ -1,0 +1,25 @@
+{
+    "NOTE": "This JSON is used by both the UI and the Flask app. The Flask app will set the training_mode variable based on the flag passed when its started.",
+    "flask_url": "http://localhost:8080",
+    "training_mode": true,
+    "actions_list": [
+        "up",
+        "left",
+        "right"
+    ],
+    "action_mappings": {
+        "0": {
+            "up": true
+        },
+        "1": {
+            "up": true,
+            "left": true
+        },
+        "2": {
+            "up": true,
+            "right": true
+        }
+    },
+    "state_space": 11,
+    "action_space": 3
+}

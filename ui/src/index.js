@@ -1,4 +1,4 @@
-import './style/main.css'
+import './style/main.scss'
 import Application from './javascript/Application.js'
 
 window.application = new Application({

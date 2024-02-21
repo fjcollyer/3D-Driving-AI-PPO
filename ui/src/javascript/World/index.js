@@ -3,34 +3,19 @@ import startImg from '../../images/clock.png';
 
 import * as THREE from 'three'
 import Materials from './Materials.js'
-import Floor from './Floor.js'
 import Shadows from './Shadows.js'
 import Physics from './Physics.js'
-import Zones from './Zones.js'
 import Objects from './Objects.js'
 import Car from './Car.js'
-import Areas from './Areas.js'
-import Tiles from './Tiles.js'
-import Walls from './Walls.js'
-import IntroSection from './Sections/IntroSection.js'
-import ProjectsSection from './Sections/ProjectsSection.js'
-import CrossroadsSection from './Sections/CrossroadsSection.js'
-import InformationSection from './Sections/InformationSection.js'
-import PlaygroundSection from './Sections/PlaygroundSection.js'
-// import DistinctionASection from './Sections/DistinctionASection.js'
-// import DistinctionBSection from './Sections/DistinctionBSection.js'
-// import DistinctionCSection from './Sections/DistinctionCSection.js'
-// import DistinctionDSection from './Sections/DistinctionDSection.js'
 import Controls from './Controls.js'
 import Sounds from './Sounds.js'
 import { TweenLite } from 'gsap/TweenLite.js'
 import { Power2 } from 'gsap/EasePack.js'
-import EasterEggs from './EasterEggs.js'
 
-export default class
-{
-    constructor(_options)
-    {
+import Racetrack from './Sections/Racetrack.js'
+
+export default class {
+    constructor(_options) {
         console.log("index constructor")
         // Options
         this.config = _options.config
@@ -43,8 +28,7 @@ export default class
         this.passes = _options.passes
 
         // Debug
-        if(this.debug)
-        {
+        if (this.debug) {
             this.debugFolder = this.debug.addFolder('world')
             this.debugFolder.open()
         }
@@ -56,36 +40,27 @@ export default class
         // this.setAxes()
         this.setSounds()
         this.setControls()
-        this.setFloor()
-        this.setAreas()
         this.setStartingScreen()
     }
 
-    start()
-    {
-        window.setTimeout(() =>
-        {
-            this.camera.pan.enable()
-            
-        }, 0)
+    start() {
+        // window.setTimeout(() => {
+        //     this.camera.pan.enable()
+
+        // }, 500)
 
         this.setReveal()
         this.setMaterials()
         this.setShadows()
         this.setPhysics()
-        this.setZones()
         this.setObjects()
         console.log("setting car in start")
         this.setCar()
-        this.areas.car = this.car
-        this.setTiles()
-        this.setWalls()
         this.setSections()
         //this.setEasterEggs()
     }
 
-    setReveal()
-    {
+    setReveal() {
         this.reveal = {}
         this.reveal.matcapsProgress = 0
         this.reveal.floorShadowsProgress = 0
@@ -93,100 +68,92 @@ export default class
         this.reveal.previousFloorShadowsProgress = null
 
         // Go method
-        this.reveal.go = () =>
-        {
+        this.reveal.go = () => {
             console.log("reveal.go")
             TweenLite.fromTo(this.reveal, 3, { matcapsProgress: 0 }, { matcapsProgress: 1 })
             TweenLite.fromTo(this.reveal, 3, { floorShadowsProgress: 0 }, { floorShadowsProgress: 1, delay: 0.5 })
             TweenLite.fromTo(this.shadows, 3, { alpha: 0 }, { alpha: 0.5, delay: 0.5 })
 
-            if(this.sections.intro)
-            {
+            if (this.sections.intro) {
                 TweenLite.fromTo(this.sections.intro.instructions.arrows.label.material, 0.3, { opacity: 0 }, { opacity: 1, delay: 0.5 })
-                if(this.sections.intro.otherInstructions)
-                {
+                if (this.sections.intro.otherInstructions) {
                     TweenLite.fromTo(this.sections.intro.otherInstructions.label.material, 0.3, { opacity: 0 }, { opacity: 1, delay: 0.75 })
                 }
             }
 
             // Car
-            this.physics.car.chassis.body.sleep()
+            this.physics.car.chassis.body.wakeUp()
             //this.physics.car.chassis.body.position.set(fjcConfig.carStartingPosition[0], fjcConfig.carStartingPosition[1], fjcConfig.carStartingPosition[2])
-
-            window.setTimeout(() =>
-            {
-                this.physics.car.chassis.body.wakeUp()
-            }, 300)
 
             // Sound
             TweenLite.fromTo(this.sounds.engine.volume, 0.5, { master: 0 }, { master: 0.7, delay: 0.3, ease: Power2.easeIn })
-            window.setTimeout(() =>
-            {
+            window.setTimeout(() => {
                 this.sounds.play('reveal')
             }, 400)
 
             // Controls
-            if(this.controls.touch)
-            {
-                window.setTimeout(() =>
-                {
+            if (this.controls.touch) {
+                window.setTimeout(() => {
                     this.controls.touch.reveal()
                 }, 400)
             }
         }
 
         // Time tick
-        this.time.on('tick',() =>
-        {
-            // Matcap progress changed
-            if(this.reveal.matcapsProgress !== this.reveal.previousMatcapsProgress)
-            {
-                // Update each material
-                for(const _materialKey in this.materials.shades.items)
-                {
-                    const material = this.materials.shades.items[_materialKey]
-                    material.uniforms.uRevealProgress.value = this.reveal.matcapsProgress
-                }
+        this.time.on('tick', () => {
+            // Instantly set progress to 100% on first tick
+            this.reveal.matcapsProgress = 1; // Assuming 1 is 100%
+            this.reveal.floorShadowsProgress = 1; // Assuming 1 is 100%
 
-                // Save
-                this.reveal.previousMatcapsProgress = this.reveal.matcapsProgress
+            // Update each material to reflect new matcaps progress
+            for (const _materialKey in this.materials.shades.items) {
+                const material = this.materials.shades.items[_materialKey];
+                material.uniforms.uRevealProgress.value = this.reveal.matcapsProgress;
             }
+            // Save the new matcaps progress
+            this.reveal.previousMatcapsProgress = this.reveal.matcapsProgress;
 
-            // Matcap progress changed
-            if(this.reveal.floorShadowsProgress !== this.reveal.previousFloorShadowsProgress)
-            {
-                // Update each floor shadow
-                for(const _mesh of this.objects.floorShadows)
-                {
-                    _mesh.material.uniforms.uAlpha.value = this.reveal.floorShadowsProgress
-                }
-
-                // Save
-                this.reveal.previousFloorShadowsProgress = this.reveal.floorShadowsProgress
+            // Update each floor shadow to reflect new floor shadows progress
+            for (const _mesh of this.objects.floorShadows) {
+                _mesh.material.uniforms.uAlpha.value = this.reveal.floorShadowsProgress;
             }
-        })
+            // Save the new floor shadows progress
+            this.reveal.previousFloorShadowsProgress = this.reveal.floorShadowsProgress;
+        });
+
 
         // Debug
-        if(this.debug)
-        {
+        if (this.debug) {
             this.debugFolder.add(this.reveal, 'matcapsProgress').step(0.0001).min(0).max(1).name('matcapsProgress')
             this.debugFolder.add(this.reveal, 'floorShadowsProgress').step(0.0001).min(0).max(1).name('floorShadowsProgress')
             this.debugFolder.add(this.reveal, 'go').name('reveal')
         }
     }
-    
+
     setStartingScreen() {
-    
+
+        const backgroundDiv = document.createElement('div');
+        backgroundDiv.style.position = 'fixed';
+        backgroundDiv.style.top = '0';
+        backgroundDiv.style.left = '0';
+        backgroundDiv.style.width = '100%';
+        backgroundDiv.style.height = '100%';
+        backgroundDiv.style.backgroundColor = 'black';
+        backgroundDiv.style.zIndex = '1000';
+        backgroundDiv.style.opacity = '1';
+        backgroundDiv.style.transition = 'opacity 0.5s ease-in-out';
+        document.body.appendChild(backgroundDiv);
+
         const loaderContainer = document.createElement('div');
         loaderContainer.className = 'loader-container';
-    loaderContainer.innerHTML = `
+        loaderContainer.innerHTML = `
         <button id="loader-startButton">
             <div id="loader-background"></div>
             0%
         </button>`;
-        
+
         document.body.appendChild(loaderContainer);
-        
+
         const style = document.createElement('style');
         style.innerHTML = `
             .loader-container {
@@ -198,6 +165,7 @@ export default class
                 display: flex;
                 justify-content: center;
                 align-items: center;
+                z-index: 1001;
             }
             
             #loader-startButton {
@@ -264,11 +232,13 @@ export default class
                 opacity: 0 !important;
                 transition: opacity 0.5s ease-in-out;
             }
+            
         `;
-        
+
         document.head.appendChild(style);
 
         let progress = 0;
+        let started = false;
         // Handling the loading progress
         this.resources.on('progress', (_progress) => {
             _progress = Math.floor(_progress * 100);
@@ -276,44 +246,56 @@ export default class
             button.textContent = _progress >= 100 ? `START` : `${_progress}%`;
             progress = _progress;
             if (_progress >= 100) {
+                if (started) return;
                 button.classList.add('loaded');
             }
         });
 
-        const startButton = document.getElementById('loader-startButton');        
+        const startButton = document.getElementById('loader-startButton');
         startButton.addEventListener('click', () => {
             if (progress < 100) {
                 console.log('Not loaded yet');
                 return;
             }
+
             loaderContainer.classList.add('fade-out');
+
+            // Remove loading button and fade out the loader
             setTimeout(() => {
                 document.body.removeChild(loaderContainer);
                 document.head.removeChild(style);
+
+                backgroundDiv.style.opacity = '0';
+                // Remove the background
+                setTimeout(() => {
+                    document.body.removeChild(backgroundDiv);
+                }, 500);
+            }, 500); // Match this with the fade-out duration.
+
+            // Start the game
+            setTimeout(() => {
                 this.start();
                 this.reveal.go();
-            }, 500);
+            }, 100);
         });
-    }    
-    
-          
 
-    setSounds()
-    {
+    }
+
+
+
+    setSounds() {
         this.sounds = new Sounds({
             debug: this.debugFolder,
             time: this.time
         })
     }
 
-    setAxes()
-    {
+    setAxes() {
         this.axis = new THREE.AxesHelper()
         this.container.add(this.axis)
     }
 
-    setControls()
-    {
+    setControls() {
         this.controls = new Controls({
             config: this.config,
             sizes: this.sizes,
@@ -323,25 +305,14 @@ export default class
         })
     }
 
-    setMaterials()
-    {
+    setMaterials() {
         this.materials = new Materials({
             resources: this.resources,
             debug: this.debugFolder
         })
     }
 
-    setFloor()
-    {
-        this.floor = new Floor({
-            debug: this.debugFolder
-        })
-
-        this.container.add(this.floor.container)
-    }
-
-    setShadows()
-    {
+    setShadows() {
         this.shadows = new Shadows({
             time: this.time,
             debug: this.debugFolder,
@@ -351,8 +322,7 @@ export default class
         this.container.add(this.shadows.container)
     }
 
-    setPhysics()
-    {
+    setPhysics() {
         this.physics = new Physics({
             config: this.config,
             debug: this.debug,
@@ -365,51 +335,7 @@ export default class
         this.container.add(this.physics.models.container)
     }
 
-    setZones()
-    {
-        this.zones = new Zones({
-            time: this.time,
-            physics: this.physics,
-            debug: this.debugFolder
-        })
-        this.container.add(this.zones.container)
-    }
-
-    setAreas()
-    {
-        this.areas = new Areas({
-            config: this.config,
-            resources: this.resources,
-            debug: this.debug,
-            renderer: this.renderer,
-            camera: this.camera,
-            car: this.car,
-            sounds: this.sounds,
-            time: this.time
-        })
-
-        this.container.add(this.areas.container)
-    }
-
-    setTiles()
-    {
-        this.tiles = new Tiles({
-            resources: this.resources,
-            objects: this.objects,
-            debug: this.debug
-        })
-    }
-
-    setWalls()
-    {
-        this.walls = new Walls({
-            resources: this.resources,
-            objects: this.objects
-        })
-    }
-
-    setObjects()
-    {
+    setObjects() {
         this.objects = new Objects({
             time: this.time,
             resources: this.resources,
@@ -427,8 +353,7 @@ export default class
         // })
     }
 
-    setCar()
-    {
+    setCar() {
         this.car = new Car({
             time: this.time,
             resources: this.resources,
@@ -446,8 +371,7 @@ export default class
         this.container.add(this.car.container)
     }
 
-    setSections()
-    {
+    setSections() {
         this.sections = {}
 
         // Generic options
@@ -460,105 +384,15 @@ export default class
             camera: this.camera,
             passes: this.passes,
             objects: this.objects,
-            areas: this.areas,
-            zones: this.zones,
-            walls: this.walls,
-            tiles: this.tiles,
             debug: this.debugFolder
         }
 
-        // // Distinction A
-        // this.sections.distinctionA = new DistinctionASection({
-        //     ...options,
-        //     x: 0,
-        //     y: - 15
-        // })
-        // this.container.add(this.sections.distinctionA.container)
-
-        // // Distinction B
-        // this.sections.distinctionB = new DistinctionBSection({
-        //     ...options,
-        //     x: 0,
-        //     y: - 15
-        // })
-        // this.container.add(this.sections.distinctionB.container)
-
-        // // Distinction C
-        // this.sections.distinctionC = new DistinctionCSection({
-        //     ...options,
-        //     x: 0,
-        //     y: 0
-        // })
-        // this.container.add(this.sections.distinctionC.container)
-
-        // Distinction D
-        // this.sections.distinctionD = new DistinctionDSection({
-        //     ...options,
-        //     x: 0,
-        //     y: 0
-        // })
-        // this.container.add(this.sections.distinctionD.container)
-
-        // Intro
-        // this.sections.intro = new IntroSection({
-        //     ...options,
-        //     x: 0,
-        //     y: 0
-        // })
-        // this.container.add(this.sections.intro.container)
-
-        // Crossroads
-        // this.sections.crossroads = new CrossroadsSection({
-        //     ...options,
-        //     x: 0,
-        //     y: - 30
-        // })
-        // this.container.add(this.sections.crossroads.container)
-
-        // Projects
-        // this.sections.projects = new ProjectsSection({
-        //     ...options,
-        //     x: 30,
-        //     y: - 30
-        //     // x: 0,
-        //     // y: 0
-        // })
-        // this.container.add(this.sections.projects.container)
-
-        // // Information
-        // this.sections.information = new InformationSection({
-        //     ...options,
-        //     x: 1.2,
-        //     y: - 55
-        //     // x: 0,
-        //     // y: - 10
-        // })
-        // this.container.add(this.sections.information.container)
-
-        // Playground
-            this.sections.playground = new PlaygroundSection({
-                ...options,
-                x: 0,
-                y: 0
-                // x: - 15,
-                // y: - 4
-            })
-            this.container.add(this.sections.playground.container)
-        }
-    
-
-    setEasterEggs()
-    {
-        // this.easterEggs = new EasterEggs({
-        //     resources: this.resources,
-        //     car: this.car,
-        //     walls: this.walls,
-        //     objects: this.objects,
-        //     materials: this.materials,
-        //     areas: this.areas,
-        //     config: this.config,
-        //     physics: this.physics
-        // })
-        // this.container.add(this.easterEggs.container)
+        // Racetrack
+        this.sections.racetrack = new Racetrack({
+            ...options,
+            x: 0,
+            y: 0
+        })
+        this.container.add(this.sections.racetrack.container)
     }
 }

@@ -12,6 +12,21 @@ export default class Physics {
         this.controls = _options.controls
         this.sounds = _options.sounds
 
+        this.averageDelta = this.time.averageDelta
+        console.log('Average delta physics:', this.averageDelta)
+        if (!this.averageDelta) {
+            this.averageDelta = 12
+            console.log('Average delta physics set to default:', this.averageDelta)
+        }
+        if (this.averageDelta > 18) {
+            this.averageDelta = 18
+            console.log('Average delta physics set to max:', this.averageDelta)
+        }
+        if (this.averageDelta < 6) {
+            this.averageDelta = 6
+            console.log('Average delta physics set to min:', this.averageDelta)
+        }
+
         // Set up
         if (this.debug) {
             this.debugFolder = this.debug.addFolder('physics')
@@ -25,6 +40,7 @@ export default class Physics {
         this.setCar()
 
         this.time.on('tick', () => {
+            // Old method
             this.world.step(1 / 60, this.time.delta, 3)
         })
     }
@@ -138,8 +154,10 @@ export default class Physics {
         this.car.options.controlsSteeringSpeed = 0.005
         this.car.options.controlsSteeringMax = Math.PI * 0.07
         this.car.options.controlsSteeringQuad = false
-        this.car.options.controlsAcceleratinMaxSpeed = 0.065
-        this.car.options.controlsAcceleratinMaxSpeedBoost = 0.11
+        // this.car.options.controlsAcceleratinMaxSpeed = 0.075 * (this.averageDelta / 10)
+        this.car.options.controlsAcceleratinMaxSpeed = 0.075
+        console.log('this.car.options.controlsAcceleratinMaxSpeed: ' + this.car.options.controlsAcceleratinMaxSpeed)
+        this.car.options.controlsAcceleratinMaxSpeedBoost = 0.16
         this.car.options.controlsAcceleratingSpeed = 2
         this.car.options.controlsAcceleratingSpeedBoost = 3.5
         this.car.options.controlsAcceleratingQuad = true
@@ -166,11 +184,9 @@ export default class Physics {
          * Create method
          */
         this.car.create = (x, y, z) => {
-            // this.world.gravity.set(0, 0, 0)
-            // setTimeout(() => {
-            //     this.world.gravity.set(0, 0, fjcConfig.gravityZ)
-            // }
-            // , 2000);
+
+            // this.world.gravity.set(0, 0, fjcConfig.gravityZ)
+
             /**
              * Chassis
              */
@@ -552,12 +568,13 @@ export default class Physics {
                 this.car.accelerating = 0
             }
 
-            this.car.vehicle.applyEngineForce(- this.car.accelerating, this.car.wheels.indexes.backLeft)
-            this.car.vehicle.applyEngineForce(- this.car.accelerating, this.car.wheels.indexes.backRight)
+            const engineForce = -this.car.accelerating
+            this.car.vehicle.applyEngineForce(engineForce, this.car.wheels.indexes.backLeft)
+            this.car.vehicle.applyEngineForce(engineForce, this.car.wheels.indexes.backRight)
 
             if (this.car.options.controlsSteeringQuad) {
-                this.car.vehicle.applyEngineForce(- this.car.accelerating, this.car.wheels.indexes.frontLeft)
-                this.car.vehicle.applyEngineForce(- this.car.accelerating, this.car.wheels.indexes.frontRight)
+                this.car.vehicle.applyEngineForce(engineForce, this.car.wheels.indexes.frontLeft)
+                this.car.vehicle.applyEngineForce(engineForce, this.car.wheels.indexes.frontRight)
             }
 
             /**
@@ -702,8 +719,6 @@ export default class Physics {
                 else if (shape === 'box') {
                     const halfExtents = new CANNON.Vec3(mesh.scale.x * 0.5, mesh.scale.y * 0.5, mesh.scale.z * 0.5)
                     shapeGeometry = new CANNON.Box(halfExtents)
-
-
                 }
                 else if (shape === 'sphere') {
                     shapeGeometry = new CANNON.Sphere(mesh.scale.x)

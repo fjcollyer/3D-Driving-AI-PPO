@@ -1,218 +1,214 @@
-
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
 
     <title>FJC</title>
-    <meta name="description" content="Creative developer living in Paris, freelancer, former lead developer at Immersive Garden, former developer at Uzik and teacher." />
+    <meta name="description"
+        content="Creative developer living in Paris, freelancer, former lead developer at Immersive Garden, former developer at Uzik and teacher." />
 
     <meta itemprop=name content="Bruno Simon - Creative developer">
-    <meta itemprop="description" content="Creative developer living in Paris, freelancer, former lead developer at Immersive Garden, former developer at Uzik and teacher.">
+    <meta itemprop="description"
+        content="Creative developer living in Paris, freelancer, former lead developer at Immersive Garden, former developer at Uzik and teacher.">
     <meta itemprop="image" content=https://bruno-simon.com/social/share-1200x630.png>
 
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Bruno Simon - Creative developer">
-    <meta name="twitter:description" content="Creative developer living in Paris, freelancer, former lead developer at Immersive Garden, former developer at Uzik and teacher.">
+    <meta name="twitter:description"
+        content="Creative developer living in Paris, freelancer, former lead developer at Immersive Garden, former developer at Uzik and teacher.">
     <meta name="twitter:image" content="https://bruno-simon.com/social/share-1200x600.png">
 
     <meta property="og:site_name" content="Bruno Simon - Creative developer">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://bruno-simon.com">
     <meta property="og:title" content="Bruno Simon - Creative developer">
-    <meta property="og:description" content="Creative developer living in Paris, freelancer, former lead developer at Immersive Garden, former developer at Uzik and teacher.">
+    <meta property="og:description"
+        content="Creative developer living in Paris, freelancer, former lead developer at Immersive Garden, former developer at Uzik and teacher.">
     <meta property="og:image" content="https://bruno-simon.com/social/share-1200x630.png">
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <link rel="apple-touch-icon" sizes="180x180" href="/favicon/apple-touch-icon.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="/favicon/favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="/favicon/favicon-16x16.png">
     <link rel="manifest" href="/favicon/site.webmanifest">
     <link rel="mask-icon" href="/favicon/safari-pinned-tab.svg" color="#ff8908">
     <meta name="apple-mobile-web-app-title" content="Bruno Simon">
     <meta name="application-name" content="Bruno Simon">
     <meta name="msapplication-TileColor" content="#da532c">
     <meta name="theme-color" content="#ffffff">
-</head>
-<body>
 
+    <!-- FJC -->
+    <link rel="icon" type="image/svg+xml" href="/cybertruck.svg">
+
+    <!--=============== REMIXICONS ===============-->
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@2.5.0/fonts/remixicon.css" rel="stylesheet">
+</head>
+
+<body>
     <canvas class="canvas js-canvas"></canvas>
 
-    <div hidden class="threejs-journey is-hover-none js-threejs-journey">
-        <!-- Lap Timer -->
-        <div class="message js-message">
-            <div class="bubble">
-                <div class="text" id="lap-timer"></div>
-                <br>
-                <div class="text" id="checkpoint-count"></div>
+    <!--=============== HEADER ===============-->
+    <header class="header" hidden>
+        <nav class="nav container">
+
+            <div class="nav-right-div">
+                <img src="/cybertruck.svg" alt="Cybertruck" class="my-logo" />
             </div>
-        </div>
 
-    </div>
-    <div hidden class="fjc-threejs-journey">
-        <!-- Buttons container -->
-        <div class="buttons-container">
-            <!-- AI Configuration Button -->
-            <button class="ai-config-btn">AI</button>
-            <!-- Leaderboard Toggle Button -->
-            <button class="leaderboard-toggle active">Leaderboard</button>
+            <!--=============== NAV MENU ===============-->
+            <div class="nav__menu" id="nav-menu">
+                <ul class="nav__list">
+                    <!--=============== DROPDOWN 1 ===============-->
+                    <li class="dropdown__item">
+                        <div class="nav__link dropdown__button">
+                            Mode: <p id="mode-in-nav"></p>
+                            <i class="ri-arrow-down-s-line dropdown__arrow"></i>
+                        </div>
 
-            <div class="indicator"></div>
-        </div>
-        <!-- Leaderboard List -->
-        <ul class="leaderboard-list">
-            <li>Time 1: 00:01:23</li>
-            <li>Time 2: 00:02:45</li>
-            <li>Time 3: 00:04:56</li>
-            <li>Time 4: 00:05:67</li>
-            <li>Time 5: 00:07:89</li>
-        </ul>
-        <!-- Placeholder for AI menu -->
-        <div class="ai-menu">
-            <p>AI Difficulty: Medium</p>
-            <p>AI Speed: 80%</p>
-            <p>AI Awareness: High</p>
-            <p>AI Aggressiveness: Low</p>
-            <br>
-            <br>
-            <br>
-            <br>
-            <br>
-            <br>
-            <p>AI Difficulty: Medium</p>
-            <p>AI Difficulty: Medium</p>
-            <p>AI Speed: 80%</p>
-            <p>AI Awareness: High</p>
-            <p>AI Aggressiveness: Low</p>
-            <br>
-            <br>
-            <br>
-            <br>
-            <br>
-            <br>
-            <p>AI Difficulty: Medium</p>
-        </div>
-    </div>
+                        <div class="dropdown__container">
+                            <div class="dropdown__content">
+                                <div class="human-mode-container">
+                                    <h1 class="mode-title">
+                                        Human Mode
+                                    </h1>
+                                    <div class="mode-image-container">
+                                        <img class="mode-image" src="/human-mode.svg" alt="Human Mode" />
+                                    </div>
+                                    <div class="mode-options-container">
+                                        <div class="mode-option">
+                                            <div class="mode-option-inner">
+                                                <h1 class="mode-option-title">
+                                                    You are the driver
+                                                </h1>
+                                                <div class="human-mode-controls">
+                                                    <div class="arrow-keys">
+                                                        <p class="key-name">Steering</p>
+                                                        <img src="/keyb/1.svg" alt="Arrow Keys" />
+                                                    </div>
+                                                    <div class="space-bar">
+                                                        <p class="key-name">Brake</p>
+                                                        <img src="/keyb/3.svg" alt="Space Bar" />
+                                                    </div>
+                                                    <div class="shift-key">
+                                                        <p class="key-name">Boost</p>
+                                                        <img src="/keyb/2.svg" alt="Shift Key" />
+                                                    </div>
+                                                </div>
+                                                <button class="button simple" id="human-button">Select</button>
 
-    <script>
-const journey = document.querySelector(".threejs-journey");
-const fjc = document.querySelector(".fjc-threejs-journey");
-const leaderboardToggle = document.querySelector(".leaderboard-toggle");
-const aiConfigBtn = document.querySelector(".ai-config-btn");
-const leaderboardList = document.querySelector(".leaderboard-list");
-const aiMenu = document.querySelector(".ai-menu");
-const indicator = document.querySelector(".indicator");
-const maxHeight = '600px';
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="ai-mode-container">
+                                    <h1 class="mode-title">
+                                        AI Mode
+                                    </h1>
+                                    <div class="mode-image-container">
+                                        <img class="mode-image" src="/ai-mode.svg" alt="AI Mode" />
+                                    </div>
+                                    <div class="mode-options-container">
+                                        <div class="mode-option">
+                                            <div class="mode-option-inner">
+                                                <h1 class="mode-option-title">
+                                                    Beginner
+                                                </h1>
+                                                <p class="ai-mode-description">
+                                                    Number of training laps:
+                                                    <br>
+                                                    <b>100,000</b>
+                                                </p>
+                                                <p class="ai-mode-description">
+                                                    Avarage track completion:
+                                                    <br>
+                                                    <b>80%</b>
+                                                </p>
+                                                <button class="button simple" id="ai-button-1">Select</button>
+                                            </div>
+                                        </div>
+                                        <div class="mode-option">
+                                            <div class="mode-option-inner">
+                                                <h1 class="mode-option-title">
+                                                    Intermediate
+                                                </h1>
+                                                <p class="ai-mode-description">
+                                                    Number of training laps:
+                                                    <br>
+                                                    <b>500,000</b>
+                                                </p>
+                                                <p class="ai-mode-description">
+                                                    Avarage track completion:
+                                                    <br>
+                                                    <b>90%</b>
+                                                </p>
+                                                <button class="button simple" id="ai-button-2">Select</button>
+                                            </div>
+                                        </div>
+                                        <div class="mode-option">
+                                            <div class="mode-option-inner">
+                                                <h1 class="mode-option-title">
+                                                    Advanced
+                                                </h1>
+                                                <p class="ai-mode-description">
+                                                    Number of training laps:
+                                                    <br>
+                                                    <b>1,000,000</b>
+                                                </p>
+                                                <p class="ai-mode-description">
+                                                    Avarage track completion:
+                                                    <br>
+                                                    <b>95%</b>
+                                                </p>
+                                                <button class="button simple" id="ai-button-3">Select</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </li>
 
-if(window.innerWidth <= 1100) {
-    // Close AI menu
-    aiMenu.style.opacity = '0';
-    aiMenu.style.maxHeight = '0px';
-    isAiMenuOpen = false;
-    
-    // Ensure leaderboard is closed
-    leaderboardList.style.opacity = '0';
-    leaderboardList.style.maxHeight = '0px';
-    isLeaderboardOpen = false;
+                    <!--=============== DROPDOWN 2 ===============-->
+                    <li class="dropdown__item">
+                        <div class="nav__link dropdown__button">
+                            Project Info<i class="ri-arrow-down-s-line dropdown__arrow"></i>
+                        </div>
 
-    // Hide indicator
-    indicator.style.display = 'none';
+                        <div class="dropdown__container">
+                            <div class="dropdown__content">
+                                <div class="info-container">
+                                    <div class="info-left">
+                                        <div class="info-title">
+                                            <h2 class="created-by-text">Created By</h2>
+                                            <h1 class="my-name-text">Fredrik Collyer</h1>
+                                        </div>
+                                    </div>
+                                    <div class="info-right">
+                                        <div class="info-title">
+                                            <h1 class="info-title-text">This is info</h1>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </li>
+                    <li class="timer-progress-container-li">
+                        <div class="timer-progress-container">
+                            <div class="nav__link" id="progress">Progress: 0%</div>
+                            <div class="nav__link" id="lap-timer">Lap Time: 00:00</div>
+                        </div>
+                    </li>
+                </ul>
+            </div>
 
-    // Center the journey and journey fjc for smaller screens
-    journey.style.left = '0';
-    journey.style.right = '0';
-    journey.style.margin = 'auto';
-
-    fjc.style.left = '0';
-    fjc.style.right = '0';
-    fjc.style.margin = 'auto';
-
-} else {
-    // AI menu is open by default
-    aiMenu.style.opacity = '1';
-    aiMenu.style.maxHeight = maxHeight;
-    isAiMenuOpen = true;
-    
-    // Leaderboard is closed by default
-    leaderboardList.style.opacity = '0';
-    leaderboardList.style.maxHeight = '0px';
-    isLeaderboardOpen = false;
-    
-    // Set the indicator to the appropriate position, given the AI menu is open
-    indicator.style.left = '20%';
-}
-let isAnimating = false;
-
-const toggleMenu = (menuToOpen, menuToClose) => {
-    if (isAnimating) return; // prevent further clicks while animating
-    if (menuToOpen) {
-        indicator.style.display = 'block';
-    }
-    isAnimating = true;
-
-    if (menuToClose) {
-        menuToClose.style.opacity = '0'; 
-        menuToClose.style.maxHeight = '0px';
-    }
-
-    if (menuToOpen && !menuToClose) {
-        menuToOpen.style.opacity = '1';
-        menuToOpen.style.maxHeight = maxHeight;; 
-    } else if (menuToOpen) {
-        setTimeout(() => {
-            menuToOpen.style.opacity = '1';
-            menuToOpen.style.maxHeight = maxHeight;; 
-        }, 100); // Read below
-    }
-
-    setTimeout(() => {
-        isAnimating = false;
-    }, 100);  // the timeout duration should be equal to the duration of your transition in CSS
-};
-
-leaderboardToggle.addEventListener("click", function() {
-    console.log("leaderboard clicked");
-    if (isAiMenuOpen && !isAnimating) {
-        toggleMenu(leaderboardList, aiMenu);
-        isLeaderboardOpen = true;
-        isAiMenuOpen = false;
-        indicator.style.left = '74%'; // Move indicator to leaderboard button
-    } else if (isLeaderboardOpen && !isAnimating) {
-        toggleMenu(null, leaderboardList);
-        isLeaderboardOpen = false;
-        isAiMenuOpen = false;
-        indicator.style.display = 'none'; // Hide indicator
-    } else if (!isLeaderboardOpen && !isAiMenuOpen && !isAnimating) {
-        toggleMenu(leaderboardList, null);
-        isLeaderboardOpen = true;
-        isAiMenuOpen = false;
-        indicator.style.left = '74%'; // Move indicator to leaderboard button
-    }
-});
-
-aiConfigBtn.addEventListener("click", function() {
-    console.log("ai clicked");
-    if (isLeaderboardOpen && !isAnimating) {
-        toggleMenu(aiMenu, leaderboardList);
-        isLeaderboardOpen = false;
-        isAiMenuOpen = true;
-        indicator.style.left = '20%'; // Move indicator to AI button
-    } else if (isAiMenuOpen && !isAnimating) {
-        toggleMenu(null, aiMenu);
-        isLeaderboardOpen = false;
-        isAiMenuOpen = false;
-        indicator.style.display = 'none'; // Hide indicator
-    } else if (!isLeaderboardOpen && !isAiMenuOpen && !isAnimating) {
-        toggleMenu(aiMenu, null);
-        isLeaderboardOpen = false;
-        isAiMenuOpen = true;
-        indicator.style.left = '20%'; // Move indicator to AI button
-    }
-});
-
-
-    </script>    
+            <div class="nav-last-div">
+                <div class="muteButtonContainer">
+                    <img src="/unmute.svg" alt="Mute/Unmute" id="muteIcon">
+                </div>
+            </div>
+        </nav>
+    </header>
 
 </body>
+
 </html>

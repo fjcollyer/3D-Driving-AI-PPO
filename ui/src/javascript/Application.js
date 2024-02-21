@@ -8,7 +8,6 @@ import Time from './Utils/Time.js'
 import World from './World/index.js'
 import Resources from './Resources.js'
 import Camera from './Camera.js'
-import ThreejsJourney from './ThreejsJourney.js'
 
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js'
 import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js'
@@ -16,13 +15,11 @@ import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js'
 import BlurPass from './Passes/Blur.js'
 import GlowsPass from './Passes/Glows.js'
 
-export default class Application
-{
+export default class Application {
     /**
      * Constructor
      */
-    constructor(_options)
-    {
+    constructor(_options) {
         console.log('🚀 Application constructor')
         // Options
         this.$canvas = _options.$canvas
@@ -38,16 +35,13 @@ export default class Application
         this.setCamera()
         this.setPasses()
         this.setWorld()
-        //this.setTitle()
-        //this.setThreejsJourney() // The HTML this set up is now set up in PlaygroundSection.js
     }
 
     /**
      * Set config
      */
     // fjc
-    setConfig()
-    {
+    setConfig() {
         this.config = {}
         // this.config.debug = window.location.hash === '#debug'
         // this.config.cyberTruck = window.location.hash === '#cybertruck'
@@ -56,25 +50,27 @@ export default class Application
 
         this.config.touch = false
 
-        window.addEventListener('touchstart', () =>
-        {
-            this.config.touch = true
-            this.world.controls.setTouch()
+        window.addEventListener('touchstart', () => {
+            console.log('touchstart')
+            fjcConfig.touchUser = true
 
+            this.config.touch = true
             this.passes.horizontalBlurPass.strength = 1
             this.passes.horizontalBlurPass.material.uniforms.uStrength.value = new THREE.Vector2(this.passes.horizontalBlurPass.strength, 0)
             this.passes.verticalBlurPass.strength = 1
             this.passes.verticalBlurPass.material.uniforms.uStrength.value = new THREE.Vector2(0, this.passes.verticalBlurPass.strength)
+
+            // Dont call this yet
+            return;
+            this.world.controls.setTouch()
         }, { once: true })
     }
 
     /**
      * Set debug
      */
-    setDebug()
-    {
-        if(this.config.debug)
-        {
+    setDebug() {
+        if (this.config.debug) {
             this.debug = new dat.GUI({ width: 420 })
         }
     }
@@ -82,8 +78,7 @@ export default class Application
     /**
      * Set renderer
      */
-    setRenderer()
-    {
+    setRenderer() {
         // Scene
         this.scene = new THREE.Scene()
 
@@ -103,8 +98,7 @@ export default class Application
         this.renderer.autoClear = false
 
         // Resize event
-        this.sizes.on('resize', () =>
-        {
+        this.sizes.on('resize', () => {
             this.renderer.setSize(this.sizes.viewport.width, this.sizes.viewport.height)
         })
     }
@@ -123,9 +117,9 @@ export default class Application
         this.camera.target.x = fjcConfig.carStartingPosition[0]
         this.camera.target.y = fjcConfig.carStartingPosition[1]
         this.camera.target.z = fjcConfig.carStartingPosition[2]
-    
+
         this.scene.add(this.camera.container)
-        
+
         this.time.on('tick', () => {
             if (this.world && this.world.car) {
                 this.camera.target.x = this.world.car.chassis.object.position.x
@@ -134,15 +128,13 @@ export default class Application
             }
         })
     }
-    
 
-    setPasses()
-    {
+
+    setPasses() {
         this.passes = {}
 
         // Debug
-        if(this.debug)
-        {
+        if (this.debug) {
             this.passes.debugFolder = this.debug.addFolder('postprocess')
             // this.passes.debugFolder.open()
         }
@@ -163,8 +155,7 @@ export default class Application
         this.passes.verticalBlurPass.material.uniforms.uStrength.value = new THREE.Vector2(0, this.passes.verticalBlurPass.strength)
 
         // Debug
-        if(this.debug)
-        {
+        if (this.debug) {
             const folder = this.passes.debugFolder.addFolder('blur')
             folder.open()
 
@@ -180,16 +171,14 @@ export default class Application
         this.passes.glowsPass.material.uniforms.uAlpha.value = 0.55
 
         // Debug
-        if(this.debug)
-        {
+        if (this.debug) {
             const folder = this.passes.debugFolder.addFolder('glows')
             folder.open()
 
             folder.add(this.passes.glowsPass.material.uniforms.uPosition.value, 'x').step(0.001).min(- 1).max(2).name('positionX')
             folder.add(this.passes.glowsPass.material.uniforms.uPosition.value, 'y').step(0.001).min(- 1).max(2).name('positionY')
             folder.add(this.passes.glowsPass.material.uniforms.uRadius, 'value').step(0.001).min(0).max(2).name('radius')
-            folder.addColor(this.passes.glowsPass, 'color').name('color').onChange(() =>
-            {
+            folder.addColor(this.passes.glowsPass, 'color').name('color').onChange(() => {
                 this.passes.glowsPass.material.uniforms.uColor.value = new THREE.Color(this.passes.glowsPass.color)
             })
             folder.add(this.passes.glowsPass.material.uniforms.uAlpha, 'value').step(0.001).min(0).max(1).name('alpha')
@@ -202,8 +191,7 @@ export default class Application
         this.passes.composer.addPass(this.passes.glowsPass)
 
         // Time tick
-        this.time.on('tick', () =>
-        {
+        this.time.on('tick', () => {
             this.passes.horizontalBlurPass.enabled = this.passes.horizontalBlurPass.material.uniforms.uStrength.value.x > 0
             this.passes.verticalBlurPass.enabled = this.passes.verticalBlurPass.material.uniforms.uStrength.value.y > 0
 
@@ -214,8 +202,7 @@ export default class Application
         })
 
         // Resize event
-        this.sizes.on('resize', () =>
-        {
+        this.sizes.on('resize', () => {
             this.renderer.setSize(this.sizes.viewport.width, this.sizes.viewport.height)
             this.passes.composer.setSize(this.sizes.viewport.width, this.sizes.viewport.height)
             this.passes.horizontalBlurPass.material.uniforms.uResolution.value.x = this.sizes.viewport.width
@@ -228,8 +215,7 @@ export default class Application
     /**
      * Set world
      */
-    setWorld()
-    {
+    setWorld() {
         this.world = new World({
             config: this.config,
             debug: this.debug,
@@ -246,8 +232,7 @@ export default class Application
     /**
      * Set title
      */
-    setTitle()
-    {
+    setTitle() {
         this.title = {}
         this.title.frequency = 300
         this.title.width = 20
@@ -255,21 +240,17 @@ export default class Application
         this.title.$element = document.querySelector('title')
         this.title.absolutePosition = Math.round(this.title.width * 0.25)
 
-        this.time.on('tick', () =>
-        {
-            if(this.world.physics)
-            {
+        this.time.on('tick', () => {
+            if (this.world.physics) {
                 this.title.absolutePosition += this.world.physics.car.forwardSpeed
 
-                if(this.title.absolutePosition < 0)
-                {
+                if (this.title.absolutePosition < 0) {
                     this.title.absolutePosition = 0
                 }
             }
         })
 
-        window.setInterval(() =>
-        {
+        window.setInterval(() => {
             this.title.position = Math.round(this.title.absolutePosition % this.title.width)
 
             document.title = `${'_'.repeat(this.title.width - this.title.position)}🚗${'_'.repeat(this.title.position)}`
@@ -277,22 +258,9 @@ export default class Application
     }
 
     /**
-     * Set Three.js Journey
-     */
-    setThreejsJourney()
-    {
-        this.threejsJourney = new ThreejsJourney({
-            config: this.config,
-            time: this.time,
-            world: this.world
-        })
-    }
-
-    /**
      * Destructor
      */
-    destructor()
-    {
+    destructor() {
         this.time.off('tick')
         this.sizes.off('resize')
 

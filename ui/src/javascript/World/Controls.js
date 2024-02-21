@@ -2,12 +2,9 @@ import mobileDoubleTriangle from '../../images/mobile/doubleTriangle.png'
 import mobileTriangle from '../../images/mobile/triangle.png'
 import mobileCross from '../../images/mobile/cross.png'
 import EventEmitter from '../Utils/EventEmitter'
-import { TweenLite } from 'gsap/TweenLite'
 
-export default class Controls extends EventEmitter
-{
-    constructor(_options)
-    {
+export default class Controls extends EventEmitter {
+    constructor(_options) {
         super()
 
         this.config = _options.config
@@ -20,8 +17,7 @@ export default class Controls extends EventEmitter
         this.setKeyboard()
     }
 
-    setActions()
-    {
+    setActions() {
         this.actions = {}
         this.actions.up = false
         this.actions.right = false
@@ -30,10 +26,8 @@ export default class Controls extends EventEmitter
         this.actions.brake = false
         this.actions.boost = false
 
-        document.addEventListener('visibilitychange', () =>
-        {
-            if(!document.hidden)
-            {
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden) {
                 this.actions.up = false
                 this.actions.right = false
                 this.actions.down = false
@@ -44,15 +38,12 @@ export default class Controls extends EventEmitter
         })
     }
 
-    setKeyboard()
-    {
+    setKeyboard() {
         this.keyboard = {}
         this.keyboard.events = {}
 
-        this.keyboard.events.keyDown = (_event) =>
-        {
-            switch(_event.key)
-            {
+        this.keyboard.events.keyDown = (_event) => {
+            switch (_event.key) {
                 case 'ArrowUp':
                 case 'z':
                 case 'w':
@@ -88,10 +79,8 @@ export default class Controls extends EventEmitter
             }
         }
 
-        this.keyboard.events.keyUp = (_event) =>
-        {
-            switch(_event.key)
-            {
+        this.keyboard.events.keyUp = (_event) => {
+            switch (_event.key) {
                 case 'ArrowUp':
                 case 'z':
                 case 'w':
@@ -133,8 +122,7 @@ export default class Controls extends EventEmitter
         document.addEventListener('keyup', this.keyboard.events.keyUp)
     }
 
-    setTouch()
-    {
+    setTouch() {
         this.touch = {}
 
         /**
@@ -201,8 +189,7 @@ export default class Controls extends EventEmitter
         this.touch.joystick.angle.value = - Math.PI * 0.5
 
         // Resize
-        this.touch.joystick.resize = () =>
-        {
+        this.touch.joystick.resize = () => {
             const boundings = this.touch.joystick.$element.getBoundingClientRect()
 
             this.touch.joystick.angle.center.x = boundings.left + boundings.width * 0.5
@@ -213,11 +200,9 @@ export default class Controls extends EventEmitter
         this.touch.joystick.resize()
 
         // Time tick
-        this.time.on('tick', () =>
-        {
+        this.time.on('tick', () => {
             // Joystick active
-            if(this.touch.joystick.active)
-            {
+            if (this.touch.joystick.active) {
                 //console.log('joystick active from controls.js')
                 // Calculate joystick angle
                 // console.log(this.touch.joystick.angle.current.x)
@@ -233,12 +218,10 @@ export default class Controls extends EventEmitter
                 // Update joystick
                 const distance = Math.hypot(this.touch.joystick.angle.current.y - this.touch.joystick.angle.center.y, this.touch.joystick.angle.current.x - this.touch.joystick.angle.center.x)
                 let radius = distance
-                if(radius > 20)
-                {
+                if (radius > 20) {
                     radius = 20 + Math.log(distance - 20) * 5
                 }
-                if(radius > 43)
-                {
+                if (radius > 43) {
                     radius = 43
                 }
                 const cursorX = Math.sin(this.touch.joystick.angle.originalValue + Math.PI * 0.5) * radius
@@ -250,14 +233,12 @@ export default class Controls extends EventEmitter
         // Events
         this.touch.joystick.events = {}
         this.touch.joystick.touchIdentifier = null
-        this.touch.joystick.events.touchstart = (_event) =>
-        {
+        this.touch.joystick.events.touchstart = (_event) => {
             _event.preventDefault()
 
             const touch = _event.changedTouches[0]
 
-            if(touch)
-            {
+            if (touch) {
                 this.touch.joystick.active = true
 
                 this.touch.joystick.touchIdentifier = touch.identifier
@@ -274,15 +255,13 @@ export default class Controls extends EventEmitter
             }
         }
 
-        this.touch.joystick.events.touchmove = (_event) =>
-        {
+        this.touch.joystick.events.touchmove = (_event) => {
             _event.preventDefault()
 
             const touches = [..._event.changedTouches]
             const touch = touches.find((_touch) => _touch.identifier === this.touch.joystick.touchIdentifier)
 
-            if(touch)
-            {
+            if (touch) {
                 this.touch.joystick.angle.current.x = touch.clientX
                 this.touch.joystick.angle.current.y = touch.clientY
 
@@ -290,13 +269,11 @@ export default class Controls extends EventEmitter
             }
         }
 
-        this.touch.joystick.events.touchend = (_event) =>
-        {
+        this.touch.joystick.events.touchend = (_event) => {
             const touches = [..._event.changedTouches]
             const touch = touches.find((_touch) => _touch.identifier === this.touch.joystick.touchIdentifier)
 
-            if(touch)
-            {
+            if (touch) {
                 this.touch.joystick.active = false
 
                 this.touch.joystick.$limit.style.opacity = '0.25'
@@ -356,14 +333,12 @@ export default class Controls extends EventEmitter
         // Events
         this.touch.boost.events = {}
         this.touch.boost.touchIdentifier = null
-        this.touch.boost.events.touchstart = (_event) =>
-        {
+        this.touch.boost.events.touchstart = (_event) => {
             _event.preventDefault()
 
             const touch = _event.changedTouches[0]
 
-            if(touch)
-            {
+            if (touch) {
                 this.camera.pan.reset()
 
                 this.touch.boost.touchIdentifier = touch.identifier
@@ -377,13 +352,11 @@ export default class Controls extends EventEmitter
             }
         }
 
-        this.touch.boost.events.touchend = (_event) =>
-        {
+        this.touch.boost.events.touchend = (_event) => {
             const touches = [..._event.changedTouches]
             const touch = touches.find((_touch) => _touch.identifier === this.touch.boost.touchIdentifier)
 
-            if(touch)
-            {
+            if (touch) {
                 this.actions.up = false
                 this.actions.boost = false
 
@@ -440,14 +413,12 @@ export default class Controls extends EventEmitter
         // Events
         this.touch.forward.events = {}
         this.touch.forward.touchIdentifier = null
-        this.touch.forward.events.touchstart = (_event) =>
-        {
+        this.touch.forward.events.touchstart = (_event) => {
             _event.preventDefault()
 
             const touch = _event.changedTouches[0]
 
-            if(touch)
-            {
+            if (touch) {
                 this.camera.pan.reset()
 
                 this.touch.forward.touchIdentifier = touch.identifier
@@ -460,13 +431,11 @@ export default class Controls extends EventEmitter
             }
         }
 
-        this.touch.forward.events.touchend = (_event) =>
-        {
+        this.touch.forward.events.touchend = (_event) => {
             const touches = [..._event.changedTouches]
             const touch = touches.find((_touch) => _touch.identifier === this.touch.forward.touchIdentifier)
 
-            if(touch)
-            {
+            if (touch) {
                 this.actions.up = false
 
                 this.touch.forward.$border.style.opacity = '0.25'
@@ -523,14 +492,12 @@ export default class Controls extends EventEmitter
         // Events
         this.touch.brake.events = {}
         this.touch.brake.touchIdentifier = null
-        this.touch.brake.events.touchstart = (_event) =>
-        {
+        this.touch.brake.events.touchstart = (_event) => {
             _event.preventDefault()
 
             const touch = _event.changedTouches[0]
 
-            if(touch)
-            {
+            if (touch) {
                 this.touch.brake.touchIdentifier = touch.identifier
 
                 this.actions.brake = true
@@ -541,13 +508,11 @@ export default class Controls extends EventEmitter
             }
         }
 
-        this.touch.brake.events.touchend = (_event) =>
-        {
+        this.touch.brake.events.touchend = (_event) => {
             const touches = [..._event.changedTouches]
             const touch = touches.find((_touch) => _touch.identifier === this.touch.brake.touchIdentifier)
 
-            if(touch)
-            {
+            if (touch) {
                 this.actions.brake = false
 
                 this.touch.brake.$border.style.opacity = '0.25'
@@ -604,14 +569,12 @@ export default class Controls extends EventEmitter
         // Events
         this.touch.backward.events = {}
         this.touch.backward.touchIdentifier = null
-        this.touch.backward.events.touchstart = (_event) =>
-        {
+        this.touch.backward.events.touchstart = (_event) => {
             _event.preventDefault()
 
             const touch = _event.changedTouches[0]
 
-            if(touch)
-            {
+            if (touch) {
                 this.camera.pan.reset()
 
                 this.touch.backward.touchIdentifier = touch.identifier
@@ -624,13 +587,11 @@ export default class Controls extends EventEmitter
             }
         }
 
-        this.touch.backward.events.touchend = (_event) =>
-        {
+        this.touch.backward.events.touchend = (_event) => {
             const touches = [..._event.changedTouches]
             const touch = touches.find((_touch) => _touch.identifier === this.touch.backward.touchIdentifier)
 
-            if(touch)
-            {
+            if (touch) {
                 this.actions.down = false
 
                 this.touch.backward.$border.style.opacity = '0.25'
@@ -642,8 +603,7 @@ export default class Controls extends EventEmitter
         this.touch.backward.$element.addEventListener('touchstart', this.touch.backward.events.touchstart)
 
         // Reveal
-        this.touch.reveal = () =>
-        {
+        this.touch.reveal = () => {
             this.touch.joystick.$element.style.opacity = 1
             this.touch.backward.$element.style.opacity = 1
             this.touch.brake.$element.style.opacity = 1

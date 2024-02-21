@@ -1,0 +1,880 @@
+* {
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+    /* Weird font here */
+    /* font-family: 'Verdana' */
+    /* font-family: "Helvetica" */
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    user-select: 'none';
+}
+
+body,
+html {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+
+.canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.canvas.has-cursor-grab {
+    cursor: default;
+}
+
+.canvas.has-cursor-grabbing {
+    cursor: default;
+}
+
+.canvas.has-cursor-pointer {
+    cursor: pointer;
+}
+
+/*=============== GOOGLE FONTS ===============*/
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap");
+
+/*=============== VARIABLES CSS ===============*/
+:root {
+    --header-height: 3.5rem;
+    /*========== Colors ==========*/
+    /*Color mode HSL(hue, saturation, lightness)*/
+    --first-color: hsl(220, 68%, 54%);
+    --first-color-lighten: hsl(220, 68%, 97%);
+    --title-color: hsl(0, 0%, 0%);
+    --text-color: hsl(220, 12%, 45%);
+    --body-color: hsla(210, 100%, 96%, 0.926);
+    /*========== Font and typography ==========*/
+    /*.5rem = 8px | 1rem = 16px ...*/
+    --body-font: "Poppins", sans-serif;
+    --normal-font-size: .938rem;
+    --small-font-size: .813rem;
+    --smaller-font-size: .75rem;
+    /*========== Font weight ==========*/
+    --font-medium: 500;
+    --font-semi-bold: 600;
+    /*========== z index ==========*/
+    --z-tooltip: 10;
+    --z-fixed: 100;
+
+    /*========== Transition ==========*/
+    --dropdown-transition: 0.25s;
+}
+
+ul {
+    list-style: none;
+}
+
+a {
+    text-decoration: none;
+}
+
+/*=============== REUSABLE CSS CLASSES ===============*/
+.container,
+.dropdown__content {
+    max-width: 1400px;
+    padding-left: 2rem;
+    padding-right: 2rem;
+}
+
+/*=============== HEADER ===============*/
+.header {
+    position: fixed;
+    top: 1.5%;
+    left: 5%;
+    width: 90%;
+    border-radius: 1rem;
+    background-color: var(--body-color);
+    z-index: var(--z-fixed);
+
+    /* Updated transition to include border-radius */
+    transition: opacity 0.5s ease-in-out, border-radius var(--dropdown-transition) ease-in-out;
+    opacity: 0;
+}
+
+.header * {
+    user-select: none;
+}
+
+.muteButtonContainer {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.muteButtonContainer img {
+    width: calc(var(--header-height) - 1.2rem);
+    height: calc(var(--header-height) - 1.2rem);
+    cursor: pointer;
+    border: none;
+    background-color: transparent;
+}
+
+.nav-last-div {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+
+/* Update navbar style when dropdown is open */
+.header.navbar-dropdown-open {
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+}
+
+
+/*=============== NAV ===============*/
+.nav__menu {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+}
+
+.nav-right-div {
+    display: flex;
+    align-items: center;
+}
+
+.my-logo {
+    width: calc(var(--header-height) - 0.6rem);
+    height: calc(var(--header-height) - 0.6rem);
+}
+
+.timer-progress-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 0.1rem;
+    cursor: default;
+
+}
+
+#progress,
+#lap-timer {
+    font-size: 12px;
+    color: #000;
+}
+
+.nav__logo {
+    display: inline-flex;
+    align-items: center;
+    column-gap: 0.25rem;
+    color: var(--title-color);
+    font-weight: var(--font-semi-bold);
+    transition: color 0.3s;
+}
+
+.nav__logo i {
+    font-size: 1.25rem;
+}
+
+.nav__toggle {
+    position: relative;
+    width: 32px;
+    height: 32px;
+}
+
+.nav__toggle-menu,
+.nav__toggle-close {
+    font-size: 1.25rem;
+    color: var(--title-color);
+    position: absolute;
+    display: grid;
+    place-items: center;
+    inset: 0;
+    /* cursor: pointer; */
+    transition: opacity 0.1s, transform var(--dropdown-transition);
+}
+
+.nav__toggle-close {
+    opacity: 0;
+}
+
+.nav__link {
+    color: var(--title-color);
+    font-weight: var(--font-semi-bold);
+    padding: 1.25rem 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: background-color 0.3s;
+}
+
+.nav__link:hover {
+    background-color: var(--first-color-lighten);
+}
+
+/* Show menu */
+.show-menu {
+    opacity: 1;
+    top: 3.5rem;
+    pointer-events: initial;
+}
+
+/* Show icon */
+.show-icon .nav__toggle-menu {
+    opacity: 0;
+    transform: rotate(90deg);
+}
+
+.show-icon .nav__toggle-close {
+    opacity: 1;
+    transform: rotate(90deg);
+}
+
+.dropdown__arrow {
+    font-size: 1.5rem;
+    font-weight: initial;
+    transition: transform var(--dropdown-transition);
+}
+
+.dropdown__container {
+    background-color: var(--first-color-lighten);
+    height: 0;
+    transition: height var(--dropdown-transition);
+    border-top-left-radius: 0;
+    /* No rounded corner at top left */
+    border-top-right-radius: 0;
+    /* No rounded corner at top right */
+    border-bottom-left-radius: 1rem;
+    /* Rounded corner at bottom left */
+    border-bottom-right-radius: 1rem;
+    /* Rounded corner at bottom right */
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.dropdown__content {
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    gap: 2rem;
+    padding-top: 2rem;
+    padding-bottom: 2rem;
+}
+
+#mode-in-nav {
+    color: #27ae60;
+}
+
+.human-mode-container {
+    flex: 1;
+    border: 2px solid black;
+    border-radius: 20px;
+    padding: 2rem 0;
+}
+
+.ai-mode-container {
+    flex: 3;
+    border: 2px solid black;
+    border-radius: 20px;
+    padding: 2rem 0;
+}
+
+.ai-mode-description {
+    font-size: 14px;
+    text-align: center;
+}
+
+.mode-title {
+    text-align: center;
+    font-size: 20px;
+    margin-bottom: 1rem;
+}
+
+.mode-image-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.mode-image {
+    width: 80px;
+    height: 80px;
+}
+
+.mode-options-container {
+    width: 100%;
+    height: 68%;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    /* border: 1px solid black; */
+}
+
+.mode-option {
+    width: 100%;
+    /* this is where i need to change the height */
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.mode-option-inner {
+    width: 80%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.mode-option-title {
+    font-size: 16px;
+    text-align: center;
+    margin-bottom: 1rem;
+}
+
+.human-mode-controls {
+    display: flex;
+    flex-direction: column;
+}
+
+.arrow-keys,
+.space-bar,
+.shift-key {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+.arrow-keys img,
+.space-bar img,
+.shift-key img {
+    width: 80px;
+    height: 80px;
+}
+
+.key-name {
+    flex: 1;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+/* Rotate dropdown icon */
+.show-dropdown .dropdown__arrow {
+    transform: rotate(180deg);
+}
+
+// Info section
+.info-container {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: row;
+}
+
+.info-left {
+    flex: 1;
+}
+
+.created-by-text {
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.my-name-text {
+    font-size: 20px;
+    font-weight: 600;
+    margin-bottom: 1rem;
+}
+
+.info-right {
+    flex: 2;
+}
+
+/*=============== BREAKPOINTS ===============*/
+
+/* Nav */
+.nav {
+    height: calc(var(--header-height) + 0.5rem);
+    display: flex;
+    justify-content: space-between;
+}
+
+.nav__toggle {
+    display: none;
+}
+
+.nav__list {
+    display: flex;
+    height: 100%;
+}
+
+.nav li {
+    display: flex;
+    padding-right: 1rem;
+    padding-left: 1rem;
+}
+
+.nav__link {
+    padding: 0;
+}
+
+.nav__link:hover {
+    background-color: initial;
+}
+
+.dropdown__container {
+    height: max-content;
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 6.5rem;
+    background-color: var(--body-color);
+    box-shadow: 0 6px 8px hsla(220, 68%, 12%, 0.05);
+    pointer-events: none;
+    opacity: 0;
+    transition: top var(--dropdown-transition), opacity 0.3s;
+}
+
+.dropdown__item:hover .dropdown__arrow {
+    transform: rotate(180deg);
+}
+
+.dropdown__item:hover>.dropdown__container {
+    opacity: 1;
+    top: calc(var(--header-height) + 0.5rem);
+    pointer-events: initial;
+    cursor: initial;
+}
+
+/* Turning button styling to various shades of green for illustration */
+.button {
+    &.alternative {
+        --color-hover: #2ecc71;
+        /* Adjusted: Lighter/Darker tone of the new Button green color for hover effects */
+        --background: #27ae60;
+        /* Adjusted: Green color */
+        --hover-back: #2ecc71;
+        /* Adjusted: Green shade for a hover's backing property */
+        --hover-front: #2ecc71;
+        /* Adjusted: Brighter/Darker tone of the hover effect color */
+    }
+
+    &.simple {
+        --background: #27ae60;
+        /* Adjusted: Darker Green color */
+        --background-hover: #2ecc71;
+        /* Adjusted: Brighter Green color for hover */
+    }
+
+    &.selected-button {
+        --b: #27ae60; // Chosen shade of green for the selected button
+        --c: #fff; // Text color for the selected button
+        // No hover effects for the 'selected' state, as it would persist
+    }
+
+    &.non-selected-button {
+        --b: rgb(255, 99, 99); // E.g., Red for non-selected buttons
+        --c: #fff; // Adjust text color for sufficient contrast as needed
+
+        // You can apply hover state color changes for the 'non-selected' buttons here as well
+        &:hover {
+            --background: #ff8b8b; // A darker tint of red for hover, adjust the color to your metric
+        }
+    }
+}
+
+.button {
+    --color: #fff;
+    /* Ensure it contrasts with the green */
+    --color-hover: var(--color);
+    --background: #27ae60;
+    /* Adjusted: Neutral/Dark Green color for the button */
+    --background-hover: #2ecc71;
+    /* Adjusted: An alternate, generally a lighter, more subtle green for hovering */
+    --hover-back: #2ecc71;
+    /* A dim/bright choice for the hover animation's retraction */
+    --hover-front: #3498db;
+    /* This should be compatible with your color scheme; modify if it's for greenery aesthetics */
+    padding: 12px 4px;
+    border-radius: 10px;
+    line-height: 24px;
+    font-size: 16px;
+    font-weight: 500;
+    letter-spacing: .02em;
+    border: none;
+    outline: none;
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+    color: var(--c, var(--color));
+    background: var(--b, var(--background));
+    transition: color 0s linear, background 0s linear;
+
+    &:not(.simple) {
+
+        &:before,
+        &:after {
+            content: '';
+            position: absolute;
+            // background: var(--pb, var(--hover-back));
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 200%;
+            border-radius: var(--br, 40%);
+            transform: translateY(var(--y, 50%));
+            transition: transform var(--d, .4s) ease-in var(--d-d, 0s), border-radius .5s ease var(--br-d, .08s);
+
+        }
+
+        &:after {
+            --pb: var(--hover-front);
+            --d: .44s;
+        }
+    }
+
+    div {
+        z-index: 1;
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        span {
+            display: block;
+            backface-visibility: hidden;
+            transform: translateZ(0);
+            animation: var(--name, none) .7s linear forwards .18s;
+        }
+    }
+
+    &.in {
+        --name: move;
+
+        &:not(.out) {
+            // --c: var(--color-hover);
+            // --b: var(--background-hover);
+
+            &:before,
+            &:after {
+                --y: 0;
+                --br: 5%;
+            }
+
+            &:after {
+                --br: 10%;
+                --d-d: .02s;
+            }
+        }
+
+        &.out {
+            --name: move-out;
+
+            &:before {
+                --d-d: .06s;
+            }
+        }
+    }
+}
+
+@keyframes move {
+
+    30%,
+    36% {
+        transform: translateY(calc(-6px * var(--move))) translateZ(0) rotate(calc(-13deg * var(--rotate) * var(--part)));
+    }
+
+    50% {
+        transform: translateY(calc(3px * var(--move))) translateZ(0) rotate(calc(6deg * var(--rotate) * var(--part)));
+    }
+
+    70% {
+        transform: translateY(calc(-2px * var(--move))) translateZ(0) rotate(calc(-3deg * var(--rotate) * var(--part)));
+    }
+}
+
+@keyframes move-out {
+
+    30%,
+    36% {
+        transform: translateY(calc(6px * var(--move))) translateZ(0) rotate(calc(13deg * var(--rotate) * var(--part)));
+    }
+
+    50% {
+        transform: translateY(calc(-3px * var(--move))) translateZ(0) rotate(calc(-6deg * var(--rotate) * var(--part)));
+    }
+
+    70% {
+        transform: translateY(calc(2px * var(--move))) translateZ(0) rotate(calc(3deg * var(--rotate) * var(--part)));
+    }
+}
+
+// Center & dribbble
+
+.button {
+    display: block;
+
+    &:first-child {
+        margin-left: 0;
+    }
+
+    &:last-child {
+        margin-right: 0;
+    }
+
+    @media(max-width: 440px) {
+        margin: 8px 0;
+    }
+}
+
+.dribbble {
+    position: fixed;
+    display: block;
+    right: 20px;
+    bottom: 20px;
+
+    img {
+        display: block;
+        height: 28px;
+    }
+}
+
+/*=============== MEDIA QUERIES ===============*/
+@media (max-width: 860px) {
+
+    // Navbar
+    .header {
+        top: 0.5%;
+        left: 2%;
+        width: 96%;
+    }
+
+    .container,
+    .dropdown__content {
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+
+    .my-logo {
+        width: calc(var(--header-height) - 1.2rem);
+        height: calc(var(--header-height) - 1.2rem);
+    }
+
+    .muteButtonContainer img {
+        width: calc(var(--header-height) - 1.6rem);
+        height: calc(var(--header-height) - 1.6rem);
+    }
+
+    .nav__link {
+        font-size: 12px;
+    }
+
+    #progress,
+    #lap-timer {
+        font-size: 10px;
+    }
+
+    // Mode Dropdown
+    .dropdown__content {
+        gap: 0.5rem;
+        padding-bottom: 1rem;
+    }
+
+    .ai-mode-container,
+    .human-mode-container {
+        padding: 1rem 0;
+        border-radius: 10px;
+    }
+
+    .mode-option-inner {
+        width: 90%;
+    }
+
+    .mode-title {
+        font-size: 16px;
+    }
+
+    .mode-image {
+        width: 50px;
+        height: 50px;
+    }
+
+    .mode-option-title {
+        font-size: 14px;
+    }
+
+    .arrow-keys img,
+    .space-bar img,
+    .shift-key img {
+        width: 50px;
+        height: 50px;
+    }
+
+    .key-name {
+        font-size: 12px;
+    }
+
+    .ai-mode-description {
+        font-size: 12px;
+    }
+
+    .simple {
+        font-size: 12px;
+    }
+
+}
+
+@media (max-width: 550px) {
+
+    // Navbar
+    // .container,
+    // .dropdown__content {
+    //     padding-left: 0.8rem;
+    //     padding-right: 0.8rem;
+    // }
+
+    li.timer-progress-container-li {
+        display: none !important;
+    }
+
+    .my-logo {
+        width: calc(var(--header-height) - 1.4rem);
+        height: calc(var(--header-height) - 1.4rem);
+    }
+
+    .muteButtonContainer img {
+        width: calc(var(--header-height) - 1.8rem);
+        height: calc(var(--header-height) - 1.8rem);
+    }
+
+    .nav__link {
+        font-size: 10px;
+    }
+
+    // Mode Dropdown
+    .dropdown__content {
+        gap: 0.2rem;
+        padding-top: 1rem;
+    }
+
+    .ai-mode-container,
+    .human-mode-container {
+        border: 1px solid black;
+        padding: 1.5rem 0;
+    }
+
+    .mode-option-inner {
+        width: 96%;
+    }
+
+    .mode-options-container {
+        gap: 0.5rem;
+    }
+
+    .mode-title {
+        font-size: 12px;
+    }
+
+    .mode-image {
+        width: 40px;
+        height: 40px;
+    }
+
+    .mode-option-title {
+        font-size: 10px;
+    }
+
+    .arrow-keys img,
+    .space-bar img,
+    .shift-key img {
+        width: 40px;
+        height: 40px;
+    }
+
+    .key-name {
+        font-size: 8px;
+    }
+
+    .ai-mode-description {
+        font-size: 8px;
+    }
+
+    .simple {
+        font-size: 8px;
+        padding: 0px;
+        border-radius: 7px;
+    }
+
+    .simple div {
+        padding: 0px;
+        height: 20px;
+    }
+
+}
+
+// 450px
+@media (max-width: 450px) {
+
+    // Navbar
+    .nav li {
+        padding-right: 0.1rem;
+        padding-left: 0.1rem;
+    }
+
+    // Mode Dropdown
+    .dropdown__content {
+        gap: 0.1rem;
+    }
+
+    .ai-mode-container,
+    .human-mode-container {
+        border: 1px solid black;
+        padding: 0.5rem 0;
+    }
+
+    .mode-options-container {
+        gap: 0.2rem;
+    }
+
+    .mode-title {
+        font-size: 12px;
+    }
+
+    .mode-image {
+        width: 30px;
+        height: 30px;
+    }
+
+    .mode-option-title {
+        font-size: 10px;
+    }
+
+    .arrow-keys img,
+    .space-bar img,
+    .shift-key img {
+        width: 30px;
+        height: 30px;
+    }
+
+    .key-name {
+        font-size: 8px;
+    }
+
+    .ai-mode-description {
+        font-size: 8px;
+    }
+
+    .simple {
+        font-size: 8px;
+    }
+}

@@ -1,0 +1,14 @@
+# Python environments
+myenv/
+__pycache__/
+*.pyc
+
+# Node modules and package locks
+ui/node_modules/
+ui/package-lock.json
+
+# Distribution files
+ui/dist/
+
+# Ignore specific directories
+ai/saved_ppo_tf_models/

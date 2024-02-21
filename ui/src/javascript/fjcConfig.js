@@ -1,9 +1,12 @@
 const fjcConfig = {
   debug: false,
   cyberTruck: true,
-  masterVolume: 0,
-  carStartingPosition: [0, 0, 40],
-  deathPositionZ: 34,
+  touchUser: false,
+  panEnabled: false,
+  defaultZoomValue: -0.4,
+  masterVolume: 1,
+  carStartingPosition: [0, 0, 48],
+  deathPositionZ: 14,
   gravityZ: -3,
   pointsForLine: {
     0: {

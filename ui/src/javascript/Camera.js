@@ -2,11 +2,10 @@ import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import { TweenLite } from 'gsap/TweenLite'
 import { Power1 } from 'gsap/EasePack'
+import fjcConfig from './fjcConfig'
 
-export default class Camera
-{
-    constructor(_options)
-    {
+export default class Camera {
+    constructor(_options) {
         console.log('Camera constructor')
         // Options
         this.time = _options.time
@@ -24,8 +23,7 @@ export default class Camera
         this.easing = 0.15
 
         // Debug
-        if(this.debug)
-        {
+        if (this.debug) {
             this.debugFolder = this.debug.addFolder('camera')
             // this.debugFolder.open()
         }
@@ -37,8 +35,7 @@ export default class Camera
         this.setOrbitControls()
     }
 
-    setAngle()
-    {
+    setAngle() {
         // Set up
         this.angle = {}
 
@@ -53,18 +50,15 @@ export default class Camera
         this.angle.value.copy(this.angle.items.default)
 
         // Set method
-        this.angle.set = (_name) =>
-        {
+        this.angle.set = (_name) => {
             const angle = this.angle.items[_name]
-            if(typeof angle !== 'undefined')
-            {
+            if (typeof angle !== 'undefined') {
                 TweenLite.to(this.angle.value, 2, { ...angle, ease: Power1.easeInOut })
             }
         }
 
         // Debug
-        if(this.debug)
-        {
+        if (this.debug) {
             this.debugFolder.add(this, 'easing').step(0.0001).min(0).max(1).name('easing')
             this.debugFolder.add(this.angle.value, 'x').step(0.001).min(- 2).max(2).name('invertDirectionX').listen()
             this.debugFolder.add(this.angle.value, 'y').step(0.001).min(- 2).max(2).name('invertDirectionY').listen()
@@ -72,8 +66,7 @@ export default class Camera
         }
     }
 
-    setInstance()
-    {
+    setInstance() {
         // Set up
         this.instance = new THREE.PerspectiveCamera(40, this.sizes.viewport.width / this.sizes.viewport.height, 1, 800)
         this.instance.up.set(0, 0, 1)
@@ -82,17 +75,14 @@ export default class Camera
         this.container.add(this.instance)
 
         // Resize event
-        this.sizes.on('resize', () =>
-        {
+        this.sizes.on('resize', () => {
             this.instance.aspect = this.sizes.viewport.width / this.sizes.viewport.height
             this.instance.updateProjectionMatrix()
         })
 
         // Time tick
-        this.time.on('tick', () =>
-        {
-            if(!this.orbitControls.enabled)
-            {
+        this.time.on('tick', () => {
+            if (!this.orbitControls.enabled) {
                 this.targetEased.x += (this.target.x - this.targetEased.x) * this.easing
                 this.targetEased.y += (this.target.y - this.targetEased.y) * this.easing
                 this.targetEased.z += (this.target.z - this.targetEased.z) * this.easing
@@ -110,22 +100,20 @@ export default class Camera
         })
     }
 
-    setZoom()
-    {
+    setZoom() {
         // Set up
         this.zoom = {}
         this.zoom.easing = 0.1
         this.zoom.minDistance = 50
         this.zoom.amplitude = 15
-        this.zoom.value = 0.5
+        this.zoom.value = fjcConfig.defaultZoomValue
         this.zoom.targetValue = this.zoom.value
         this.zoom.distance = this.zoom.minDistance + this.zoom.amplitude * this.zoom.value
 
         // Listen to mousewheel event
-        document.addEventListener('mousewheel', (_event) =>
-        {
+        document.addEventListener('mousewheel', (_event) => {
             this.zoom.targetValue += _event.deltaY * 0.001
-            this.zoom.targetValue = Math.min(Math.max(this.zoom.targetValue, -3), 30)
+            this.zoom.targetValue = Math.min(Math.max(this.zoom.targetValue, -2.8), 8)
         }, { passive: true })
 
         // Touch
@@ -133,19 +121,15 @@ export default class Camera
         this.zoom.touch.startDistance = 0
         this.zoom.touch.startValue = 0
 
-        this.renderer.domElement.addEventListener('touchstart', (_event) =>
-        {
-            if(_event.touches.length === 2)
-            {
+        this.renderer.domElement.addEventListener('touchstart', (_event) => {
+            if (_event.touches.length === 2) {
                 this.zoom.touch.startDistance = Math.hypot(_event.touches[0].clientX - _event.touches[1].clientX, _event.touches[0].clientX - _event.touches[1].clientX)
                 this.zoom.touch.startValue = this.zoom.targetValue
             }
         })
 
-        this.renderer.domElement.addEventListener('touchmove', (_event) =>
-        {
-            if(_event.touches.length === 2)
-            {
+        this.renderer.domElement.addEventListener('touchmove', (_event) => {
+            if (_event.touches.length === 2) {
                 _event.preventDefault()
 
                 const distance = Math.hypot(_event.touches[0].clientX - _event.touches[1].clientX, _event.touches[0].clientX - _event.touches[1].clientX)
@@ -157,15 +141,13 @@ export default class Camera
         })
 
         // Time tick event
-        this.time.on('tick', () =>
-        {
+        this.time.on('tick', () => {
             this.zoom.value += (this.zoom.targetValue - this.zoom.value) * this.zoom.easing
             this.zoom.distance = this.zoom.minDistance + this.zoom.amplitude * this.zoom.value
         })
     }
 
-    setPan()
-    {
+    setPan() {
         // Set up
         this.pan = {}
         this.pan.enabled = false
@@ -189,32 +171,28 @@ export default class Camera
         )
         this.container.add(this.pan.hitMesh)
 
-        this.pan.reset = () =>
-        {
+        this.pan.reset = () => {
             this.pan.targetValue.x = 0
             this.pan.targetValue.y = 0
         }
 
-        this.pan.enable = () =>
-        {
-            this.pan.enabled = true
+        this.pan.enable = () => {
+            this.pan.enabled = fjcConfig.panEnabled
+            console.log('this.pan.enabled = ' + this.pan.enabled)
 
             // Update cursor
             this.renderer.domElement.classList.add('has-cursor-grab')
         }
 
-        this.pan.disable = () =>
-        {
+        this.pan.disable = () => {
             this.pan.enabled = false
 
             // Update cursor
             this.renderer.domElement.classList.remove('has-cursor-grab')
         }
 
-        this.pan.down = (_x, _y) =>
-        {
-            if(!this.pan.enabled)
-            {
+        this.pan.down = (_x, _y) => {
+            if (!this.pan.enabled) {
                 return
             }
 
@@ -233,22 +211,18 @@ export default class Camera
 
             const intersects = this.pan.raycaster.intersectObjects([this.pan.hitMesh])
 
-            if(intersects.length)
-            {
+            if (intersects.length) {
                 this.pan.start.x = intersects[0].point.x
                 this.pan.start.y = intersects[0].point.y
             }
         }
 
-        this.pan.move = (_x, _y) =>
-        {
-            if(!this.pan.enabled)
-            {
+        this.pan.move = (_x, _y) => {
+            if (!this.pan.enabled) {
                 return
             }
 
-            if(!this.pan.active)
-            {
+            if (!this.pan.active) {
                 return
             }
 
@@ -258,8 +232,7 @@ export default class Camera
             this.pan.needsUpdate = true
         }
 
-        this.pan.up = () =>
-        {
+        this.pan.up = () => {
             // Deactivate
             this.pan.active = false
 
@@ -268,56 +241,45 @@ export default class Camera
         }
 
         // Mouse
-        window.addEventListener('mousedown', (_event) =>
-        {
+        window.addEventListener('mousedown', (_event) => {
             this.pan.down(_event.clientX, _event.clientY)
         })
 
-        window.addEventListener('mousemove', (_event) =>
-        {
+        window.addEventListener('mousemove', (_event) => {
             this.pan.move(_event.clientX, _event.clientY)
         })
 
-        window.addEventListener('mouseup', () =>
-        {
+        window.addEventListener('mouseup', () => {
             this.pan.up()
         })
 
         // Touch
-        this.renderer.domElement.addEventListener('touchstart', (_event) =>
-        {
-            if(_event.touches.length === 1)
-            {
+        this.renderer.domElement.addEventListener('touchstart', (_event) => {
+            if (_event.touches.length === 1) {
                 this.pan.down(_event.touches[0].clientX, _event.touches[0].clientY)
             }
         })
 
-        this.renderer.domElement.addEventListener('touchmove', (_event) =>
-        {
-            if(_event.touches.length === 1)
-            {
+        this.renderer.domElement.addEventListener('touchmove', (_event) => {
+            if (_event.touches.length === 1) {
                 this.pan.move(_event.touches[0].clientX, _event.touches[0].clientY)
             }
         })
 
-        this.renderer.domElement.addEventListener('touchend', () =>
-        {
+        this.renderer.domElement.addEventListener('touchend', () => {
             this.pan.up()
         })
 
         // Time tick event
-        this.time.on('tick', () =>
-        {
+        this.time.on('tick', () => {
             // If active
-            if(this.pan.active && this.pan.needsUpdate)
-            {
+            if (this.pan.active && this.pan.needsUpdate) {
                 // Update target value
                 this.pan.raycaster.setFromCamera(this.pan.mouse, this.instance)
 
                 const intersects = this.pan.raycaster.intersectObjects([this.pan.hitMesh])
 
-                if(intersects.length)
-                {
+                if (intersects.length) {
                     this.pan.targetValue.x = - (intersects[0].point.x - this.pan.start.x)
                     this.pan.targetValue.y = - (intersects[0].point.y - this.pan.start.y)
                 }
@@ -332,8 +294,7 @@ export default class Camera
         })
     }
 
-    setOrbitControls()
-    {
+    setOrbitControls() {
         // Set up
         this.orbitControls = new OrbitControls(this.instance, this.renderer.domElement)
         this.orbitControls.enabled = false
@@ -341,8 +302,7 @@ export default class Camera
         this.orbitControls.zoomSpeed = 0.5
 
         // Debug
-        if(this.debug)
-        {
+        if (this.debug) {
             this.debugFolder.add(this.orbitControls, 'enabled').name('orbitControlsEnabled')
         }
     }

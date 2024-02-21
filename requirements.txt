@@ -1,0 +1,7 @@
+Flask==3.0.0
+flask-cors==4.0.0
+numpy==1.26.3
+matplotlib==3.8.2
+tensorflow==2.15.0
+tensorflow-probability==0.23.0
+gunicorn==21.2.0
