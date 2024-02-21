@@ -162,8 +162,8 @@ a {
 }
 
 .my-logo {
-    width: calc(var(--header-height) - 0.6rem);
-    height: calc(var(--header-height) - 0.6rem);
+    width: calc(var(--header-height) + 0.6rem);
+    height: calc(var(--header-height) - 0rem);
 }
 
 .timer-progress-container {
@@ -690,8 +690,8 @@ a {
     }
 
     .my-logo {
-        width: calc(var(--header-height) - 1.2rem);
-        height: calc(var(--header-height) - 1.2rem);
+        width: calc(var(--header-height) - 0rem);
+        height: calc(var(--header-height) - 0rem);
     }
 
     .muteButtonContainer img {
@@ -772,8 +772,8 @@ a {
     }
 
     .my-logo {
-        width: calc(var(--header-height) - 1.4rem);
-        height: calc(var(--header-height) - 1.4rem);
+        width: calc(var(--header-height) - 0.3rem);
+        height: calc(var(--header-height) - 0rem);
     }
 
     .muteButtonContainer img {
