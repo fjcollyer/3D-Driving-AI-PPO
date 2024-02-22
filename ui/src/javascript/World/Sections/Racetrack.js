@@ -29,7 +29,7 @@ export default class Racetrack {
 
         // Set up HTML elements
         this.isMuted = false;
-        this.muteByDefault = true;
+        this.muteByDefault = false;
         this.currentMode = "ai-button-3"; // Name the modes per the button IDs
         this.setupHTML();
 
@@ -94,6 +94,16 @@ export default class Racetrack {
                 // Initialize PPOAgent with the fetched configuration
                 if (this.training_mode) {
                     console.log("Training mode is enabled.");
+                    document.getElementById("info-dropdown-item").style.display = "none";
+                    document.getElementById("mode-dropdown-item").style.display = "none";
+                    const event = new KeyboardEvent('keydown', {
+                        key: 'm',
+                        code: 'KeyM',
+                        bubbles: true,
+                        cancelable: true
+                    });
+                    window.dispatchEvent(event);
+                    console.log("Training mode is enabled. Hiding the info and mode dropdown items and muting the game by default.");
                 } else {
                     this.ppo_agent_beginner = new PPOAgent(this.tfjs_model_paths.beginner.actor, this.tfjs_model_paths.beginner.critic, this.actions_list, this.action_mappings, this.state_space);
                     this.ppo_agent_intermediate = new PPOAgent(this.tfjs_model_paths.intermediate.actor, this.tfjs_model_paths.intermediate.critic, this.actions_list, this.action_mappings, this.state_space);
@@ -639,7 +649,6 @@ export default class Racetrack {
     }
 
     setupHTML() {
-        // unhide the menu class is header
         const header = document.querySelector('header');
         header.removeAttribute('hidden');
         setTimeout(() => {
