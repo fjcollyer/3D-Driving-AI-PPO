@@ -38,7 +38,7 @@ export default class Racetrack {
         this.lastTickTime = Date.now();
 
         // General AI game logic
-        this.aiModeActive = true; // This determines whether the AI plays or the player plays. It does not affect whether we are in training mode or not
+        window.aiModeActive = true; // This determines whether the AI plays or the player plays. It does not affect whether we are in training mode or not
         this.gamePaused = false; // Used to pause the game when in training mode
         this.agentId = Math.random().toString(36).substr(2, 9); // Used to identify the agent in the Flask app when in training mode
         this.toleranceDistanceRays = 0.8; // If any of the rays are shorter than this distance we consider the car to have fallen off the track
@@ -55,10 +55,6 @@ export default class Racetrack {
         this.setupLighting();
         this.loadRacetrack();
         // this.addLinePathFromPoints();
-
-        // Handle setting touch controls
-        console.log("fjcConfig.touchUser: " + fjcConfig.touchUser);
-        // this.physics.controls.setTouch()
 
         // Start the main tick function / Event loop
         this.setTickFunction();
@@ -439,12 +435,12 @@ export default class Racetrack {
                 this.updateHtml();
 
                 // AI logic
-                if (this.aiModeActive && this.gameInProgress) {
+                if (window.aiModeActive && this.gameInProgress) {
                     this.aiTick();
                 }
 
                 // Player logic
-                if (!this.aiModeActive && this.gameInProgress) {
+                if (!window.aiModeActive && this.gameInProgress) {
                     this.playerTick();
                 }
             }
@@ -452,16 +448,25 @@ export default class Racetrack {
     }
 
     playerTick() {
+        const state = this.getState();
+
         // Check for death
         // if (Object.entries(this.rayLinesLengths).filter(([key, _]) => key !== 'downward').some(([, length]) => length <= this.toleranceDistanceRays)) {
         //     this.resetGame();
         //     return;
         // }
+
+        // Default death by falling off the track
         if (this.physics.car.chassis.body.position.z <= fjcConfig.deathPositionZ) {
             this.resetGame();
             return;
         }
-        const state = this.getState();
+
+        // Check for win
+        if ((state.percentOfTrackCompleted * 100) >= 100) { // * 100 because percentOfTrackCompleted is normalized to [0, 1]
+            this.resetGame();
+            return;
+        }
     }
 
     /*
@@ -669,20 +674,14 @@ export default class Racetrack {
             }
         });
 
-        // Mute by default if this.isMuted is true
         if (this.muteByDefault) {
             emitMKeydown();
         }
-        // Automatically mute on mobile devices
-        // if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
-        //     emitMKeydown();
-        // }
 
         const buttonIds = ['human-button', 'ai-button-1', 'ai-button-2', 'ai-button-3'];
 
         // Function to apply animated text effect
         function applyTextAnimation(button, text) {
-            console.log('Applying animation to:', button.id, 'with text:', text);
             let div = document.createElement('div'),
                 letters = text.trim().split('');
 
@@ -729,7 +728,6 @@ export default class Racetrack {
                 if (dropdownArrow) {
                     dropdownArrow.classList.remove('open');
                 }
-                console.log("hideDropdown: ", targetDropdown);
             } else {
                 console.error('hideDropdown: targetDropdown is not defined');
             }
@@ -765,7 +763,6 @@ export default class Racetrack {
                 if (dropdownArrow) {
                     dropdownArrow.classList.add('open');
                 }
-                console.log("showDropdown: ", targetDropdown);
             } else {
                 console.error('showDropdown: targetDropdown is not defined');
             }
@@ -902,7 +899,7 @@ export default class Racetrack {
                     }
                     this.currentMode = button.id;
                     if (this.currentMode === "human-button") {
-                        this.aiModeActive = false;
+                        window.aiModeActive = false;
                         for (const action of this.actions_list) {
                             this.physics.controls.actions[action] = false;
                         }
@@ -912,7 +909,7 @@ export default class Racetrack {
                             }
                         }, 200);
                     } else {
-                        this.aiModeActive = true;
+                        window.aiModeActive = true;
                     }
 
                     buttonIds.forEach(id => {
@@ -933,6 +930,18 @@ export default class Racetrack {
                     const targetDropdown = button.closest('.dropdown__container');
                     hideDropdown(targetDropdown);
                     displayNewModeMessage(button.id);
+
+                    // Handle touch controls
+                    if (window.touchUserDetected) {
+                        if (button.id === "human-button") {
+                            this.physics.controls.touch.reveal();
+                            console.log("Revealing touch controls");
+                        } else {
+                            this.physics.controls.touch.hide();
+                            console.log("Hiding touch controls");
+                        }
+                    }
+
                 });
             }
         });

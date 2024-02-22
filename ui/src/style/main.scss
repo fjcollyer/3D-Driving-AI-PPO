@@ -7,6 +7,7 @@
     /* font-family: "Helvetica" */
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
     user-select: 'none';
+    -webkit-tap-highlight-color: transparent;
 }
 
 body,
@@ -162,7 +163,7 @@ a {
 }
 
 .my-logo {
-    width: calc(var(--header-height) + 0.6rem);
+    width: calc(var(--header-height) + 0rem);
     height: calc(var(--header-height) - 0rem);
 }
 
@@ -223,7 +224,8 @@ a {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    transition: background-color 0.3s;
+    // transition: background-color 0.3s;
+    -webkit-tap-highlight-color: transparent;
 }
 
 /* Show menu */
@@ -690,8 +692,8 @@ a {
     }
 
     .my-logo {
-        width: calc(var(--header-height) - 0rem);
-        height: calc(var(--header-height) - 0rem);
+        width: calc(var(--header-height) - 0.4rem);
+        height: calc(var(--header-height) - 0.4rem);
     }
 
     .muteButtonContainer img {
@@ -772,8 +774,8 @@ a {
     }
 
     .my-logo {
-        width: calc(var(--header-height) - 0.3rem);
-        height: calc(var(--header-height) - 0rem);
+        width: calc(var(--header-height) - 0.8rem);
+        height: calc(var(--header-height) - 0.8rem);
     }
 
     .muteButtonContainer img {

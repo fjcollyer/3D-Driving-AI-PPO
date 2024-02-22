@@ -92,11 +92,12 @@ export default class {
             }, 400)
 
             // Controls
-            if (this.controls.touch) {
-                window.setTimeout(() => {
-                    this.controls.touch.reveal()
-                }, 400)
-            }
+            // We now manually reveal the touch controls
+            // if (this.controls.touch) {
+            //     window.setTimeout(() => {
+            //         this.controls.touch.reveal()
+            //     }, 400)
+            // }
         }
 
         // Time tick

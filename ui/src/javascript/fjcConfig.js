@@ -1,7 +1,6 @@
 const fjcConfig = {
   debug: false,
   cyberTruck: true,
-  touchUser: false,
   panEnabled: false,
   defaultZoomValue: -0.4,
   masterVolume: 1,

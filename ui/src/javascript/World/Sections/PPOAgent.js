@@ -14,9 +14,9 @@ class PPOAgent {
   async loadModels() {
     this.actorModel = await tf.loadGraphModel(this.path_to_tfjs_actor);
     this.criticModel = await tf.loadGraphModel(this.path_to_tfjs_critic);
-    console.log('Actor and critic models loaded');
-    console.log(this.actorModel);
-    console.log(this.criticModel);
+    // console.log('Actor and critic models loaded');
+    // console.log(this.actorModel);
+    // console.log(this.criticModel);
   }
 
   async chooseAction(stateObject) {

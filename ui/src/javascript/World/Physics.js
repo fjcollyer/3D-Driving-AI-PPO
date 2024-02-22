@@ -154,9 +154,7 @@ export default class Physics {
         this.car.options.controlsSteeringSpeed = 0.005
         this.car.options.controlsSteeringMax = Math.PI * 0.07
         this.car.options.controlsSteeringQuad = false
-        // this.car.options.controlsAcceleratinMaxSpeed = 0.075 * (this.averageDelta / 10)
         this.car.options.controlsAcceleratinMaxSpeed = 0.075
-        console.log('this.car.options.controlsAcceleratinMaxSpeed: ' + this.car.options.controlsAcceleratinMaxSpeed)
         this.car.options.controlsAcceleratinMaxSpeedBoost = 0.16
         this.car.options.controlsAcceleratingSpeed = 2
         this.car.options.controlsAcceleratingSpeedBoost = 3.5
@@ -198,7 +196,6 @@ export default class Physics {
             this.car.chassis.body.allowSleep = false
 
             // fjc
-            console.log("this.car.create called with x: " + x + " y: " + y + " z: " + z)
             this.car.chassis.body.position.set(x, y, z)
 
             this.car.chassis.body.sleep()
@@ -317,7 +314,6 @@ export default class Physics {
          * Recreate method
          */
         this.car.recreate = (x, y, z) => {
-            console.log("this.car.recreate called with x: " + x + " y: " + y + " z: " + z)
 
             this.car.destroy()
             this.car.create(x, y, z)
@@ -360,8 +356,6 @@ export default class Physics {
          */
         // fjc
         this.world.addEventListener('postStep', () => {
-
-            //console.log('position of car with 1 decimal, x: ' + this.car.chassis.body.position.x.toFixed(1) + ' y: ' + this.car.chassis.body.position.y.toFixed(1) + ' z: ' + this.car.chassis.body.position.z.toFixed(1))
 
             // Update speed
             let positionDelta = new CANNON.Vec3()
@@ -482,11 +476,10 @@ export default class Physics {
             /**
              * Steering
              */
-            if (this.controls.touch) {
+            if (this.controls.touch && !window.aiModeActive) {
                 let deltaAngle = 0
 
                 if (this.controls.touch.joystick.active) {
-                    console.log(this.controls.touch.joystick.angle.value)
                     // Calculate delta between joystick and car angles
                     deltaAngle = (this.controls.touch.joystick.angle.value - this.car.angle + Math.PI) % (Math.PI * 2) - Math.PI
                     deltaAngle = deltaAngle < - Math.PI ? deltaAngle + Math.PI * 2 : deltaAngle
@@ -502,7 +495,7 @@ export default class Physics {
                 }
             }
 
-            if (!this.controls.touch || !this.controls.touch.joystick.active) {
+            if (!this.controls.touch || !this.controls.touch.joystick.active || window.aiModeActive) {
                 const steerStrength = this.time.delta * this.car.options.controlsSteeringSpeed
 
                 // Steer right

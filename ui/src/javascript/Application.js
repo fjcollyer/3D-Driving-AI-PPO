@@ -51,8 +51,8 @@ export default class Application {
         this.config.touch = false
 
         window.addEventListener('touchstart', () => {
-            console.log('touchstart')
-            fjcConfig.touchUser = true
+            console.log('touchstart: setting window.touchUserDetected = true and calling this.world.controls.setTouch()')
+            window.touchUserDetected = true
 
             this.config.touch = true
             this.passes.horizontalBlurPass.strength = 1
@@ -60,8 +60,6 @@ export default class Application {
             this.passes.verticalBlurPass.strength = 1
             this.passes.verticalBlurPass.material.uniforms.uStrength.value = new THREE.Vector2(0, this.passes.verticalBlurPass.strength)
 
-            // Dont call this yet
-            return;
             this.world.controls.setTouch()
         }, { once: true })
     }

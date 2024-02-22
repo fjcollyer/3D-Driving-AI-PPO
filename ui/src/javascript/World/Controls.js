@@ -43,32 +43,29 @@ export default class Controls extends EventEmitter {
         this.keyboard.events = {}
 
         this.keyboard.events.keyDown = (_event) => {
+            if (window.aiModeActive) {
+                return
+            }
+
             switch (_event.key) {
                 case 'ArrowUp':
-                case 'z':
-                case 'w':
                     this.camera.pan.reset()
                     this.actions.up = true
                     break
 
                 case 'ArrowRight':
-                case 'd':
                     this.actions.right = true
                     break
 
                 case 'ArrowDown':
-                case 's':
                     this.camera.pan.reset()
                     this.actions.down = true
                     break
 
                 case 'ArrowLeft':
-                case 'q':
-                case 'a':
                     this.actions.left = true
                     break
 
-                case 'Control':
                 case ' ':
                     this.actions.brake = true
                     break
@@ -80,30 +77,27 @@ export default class Controls extends EventEmitter {
         }
 
         this.keyboard.events.keyUp = (_event) => {
+            if (window.aiModeActive) {
+                return
+            }
+
             switch (_event.key) {
                 case 'ArrowUp':
-                case 'z':
-                case 'w':
                     this.actions.up = false
                     break
 
                 case 'ArrowRight':
-                case 'd':
                     this.actions.right = false
                     break
 
                 case 'ArrowDown':
-                case 's':
                     this.actions.down = false
                     break
 
                 case 'ArrowLeft':
-                case 'q':
-                case 'a':
                     this.actions.left = false
                     break
 
-                case 'Control':
                 case ' ':
                     this.actions.brake = false
                     break
@@ -133,6 +127,8 @@ export default class Controls extends EventEmitter {
 
         // Element
         this.touch.joystick.$element = document.createElement('div')
+        // set its id fjc
+        this.touch.joystick.$element.id = 'touch-joystick'
         this.touch.joystick.$element.style.userSelect = 'none'
         this.touch.joystick.$element.style.position = 'fixed'
         this.touch.joystick.$element.style.bottom = '10px'
@@ -203,18 +199,12 @@ export default class Controls extends EventEmitter {
         this.time.on('tick', () => {
             // Joystick active
             if (this.touch.joystick.active) {
-                //console.log('joystick active from controls.js')
                 // Calculate joystick angle
-                // console.log(this.touch.joystick.angle.current.x)
-                // console.log(this.touch.joystick.angle.current.y)
-                // console.log(this.touch.joystick.angle.center.x)
-                // console.log(this.touch.joystick.angle.center.y)
                 this.touch.joystick.angle.originalValue = - Math.atan2(
                     this.touch.joystick.angle.current.y - this.touch.joystick.angle.center.y,
                     this.touch.joystick.angle.current.x - this.touch.joystick.angle.center.x
                 )
                 this.touch.joystick.angle.value = this.touch.joystick.angle.originalValue + this.touch.joystick.angle.offset
-                //console.log(this.touch.joystick.angle.value)
                 // Update joystick
                 const distance = Math.hypot(this.touch.joystick.angle.current.y - this.touch.joystick.angle.center.y, this.touch.joystick.angle.current.x - this.touch.joystick.angle.center.x)
                 let radius = distance
@@ -295,6 +285,8 @@ export default class Controls extends EventEmitter {
 
         // Element
         this.touch.boost.$element = document.createElement('div')
+        // set its id fjc
+        this.touch.boost.$element.id = 'touch-boost'
         this.touch.boost.$element.style.userSelect = 'none'
         this.touch.boost.$element.style.position = 'fixed'
         this.touch.boost.$element.style.bottom = 'calc(70px * 3 + 15px)'
@@ -336,6 +328,11 @@ export default class Controls extends EventEmitter {
         this.touch.boost.events.touchstart = (_event) => {
             _event.preventDefault()
 
+            if (window.aiModeActive) {
+                console.log('prevented boost')
+                return
+            }
+
             const touch = _event.changedTouches[0]
 
             if (touch) {
@@ -353,6 +350,11 @@ export default class Controls extends EventEmitter {
         }
 
         this.touch.boost.events.touchend = (_event) => {
+
+            if (window.aiModeActive) {
+                return
+            }
+
             const touches = [..._event.changedTouches]
             const touch = touches.find((_touch) => _touch.identifier === this.touch.boost.touchIdentifier)
 
@@ -375,6 +377,8 @@ export default class Controls extends EventEmitter {
 
         // Element
         this.touch.forward.$element = document.createElement('div')
+        // set its id fjc
+        this.touch.forward.$element.id = 'touch-forward'
         this.touch.forward.$element.style.userSelect = 'none'
         this.touch.forward.$element.style.position = 'fixed'
         this.touch.forward.$element.style.bottom = 'calc(70px * 2 + 15px)'
@@ -416,6 +420,11 @@ export default class Controls extends EventEmitter {
         this.touch.forward.events.touchstart = (_event) => {
             _event.preventDefault()
 
+            if (window.aiModeActive) {
+                console.log('prevented forward')
+                return
+            }
+
             const touch = _event.changedTouches[0]
 
             if (touch) {
@@ -432,6 +441,11 @@ export default class Controls extends EventEmitter {
         }
 
         this.touch.forward.events.touchend = (_event) => {
+
+            if (window.aiModeActive) {
+                return
+            }
+
             const touches = [..._event.changedTouches]
             const touch = touches.find((_touch) => _touch.identifier === this.touch.forward.touchIdentifier)
 
@@ -453,6 +467,8 @@ export default class Controls extends EventEmitter {
 
         // Element
         this.touch.brake.$element = document.createElement('div')
+        // set its id fjc
+        this.touch.brake.$element.id = 'touch-brake'
         this.touch.brake.$element.style.userSelect = 'none'
         this.touch.brake.$element.style.position = 'fixed'
         this.touch.brake.$element.style.bottom = 'calc(70px + 15px)'
@@ -495,6 +511,11 @@ export default class Controls extends EventEmitter {
         this.touch.brake.events.touchstart = (_event) => {
             _event.preventDefault()
 
+            if (window.aiModeActive) {
+                console.log('prevented brake')
+                return
+            }
+
             const touch = _event.changedTouches[0]
 
             if (touch) {
@@ -509,6 +530,11 @@ export default class Controls extends EventEmitter {
         }
 
         this.touch.brake.events.touchend = (_event) => {
+
+            if (window.aiModeActive) {
+                return
+            }
+
             const touches = [..._event.changedTouches]
             const touch = touches.find((_touch) => _touch.identifier === this.touch.brake.touchIdentifier)
 
@@ -530,6 +556,8 @@ export default class Controls extends EventEmitter {
 
         // Element
         this.touch.backward.$element = document.createElement('div')
+        // set its id fjc
+        this.touch.backward.$element.id = 'touch-backward'
         this.touch.backward.$element.style.userSelect = 'none'
         this.touch.backward.$element.style.position = 'fixed'
         this.touch.backward.$element.style.bottom = '15px'
@@ -572,6 +600,11 @@ export default class Controls extends EventEmitter {
         this.touch.backward.events.touchstart = (_event) => {
             _event.preventDefault()
 
+            if (window.aiModeActive) {
+                console.log('prevented backward')
+                return
+            }
+
             const touch = _event.changedTouches[0]
 
             if (touch) {
@@ -588,6 +621,11 @@ export default class Controls extends EventEmitter {
         }
 
         this.touch.backward.events.touchend = (_event) => {
+
+            if (window.aiModeActive) {
+                return
+            }
+
             const touches = [..._event.changedTouches]
             const touch = touches.find((_touch) => _touch.identifier === this.touch.backward.touchIdentifier)
 
@@ -601,6 +639,15 @@ export default class Controls extends EventEmitter {
         }
 
         this.touch.backward.$element.addEventListener('touchstart', this.touch.backward.events.touchstart)
+
+        // Hide
+        this.touch.hide = () => {
+            this.touch.joystick.$element.style.opacity = 0
+            this.touch.backward.$element.style.opacity = 0
+            this.touch.brake.$element.style.opacity = 0
+            this.touch.forward.$element.style.opacity = 0
+            this.touch.boost.$element.style.opacity = 0
+        }
 
         // Reveal
         this.touch.reveal = () => {
