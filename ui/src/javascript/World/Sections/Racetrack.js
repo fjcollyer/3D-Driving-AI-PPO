@@ -4,9 +4,11 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 
 // Models
-import racetrackVizModel from '../../../models/racetrack/racetrackViz.glb';
-import racetrackRaysModel from '../../../models/racetrack/racetrackRays.glb';
-import racetrackCollisionModel from '../../../models/racetrack/racetrack-physics.glb';
+// The model actually used for physics is in this.resources.items.racetrackPhysics.scene
+// Its file path is: ../models/racetrack/racetrack-physics.glb
+import racetrackVizModel from '../../../models/racetrack/racetrackViz.glb'; // Used for visualization
+import racetrackRaysModel from '../../../models/racetrack/racetrackRays.glb'; // Used for raycasting only
+import racetrackCollisionModel from '../../../models/racetrack/racetrack-physics.glb'; // Used for raycasting only
 
 // AI
 import PPOAgent from './PPOAgent.js';
@@ -1014,13 +1016,17 @@ export default class Racetrack {
         const loader2 = new GLTFLoader();
 
         // Used for: Visual: True, Collision: False, Raycasting: False
-
-        if (!this.training_mode) {
-            loader0.load(racetrackVizModel, (gltf) => {
-                const model = gltf.scene;
-                this.container.add(model);
-            });
-        }
+        // Do to async we cant wait for the training_mode to be set so we will always load the racetrackVizModel
+        // if (!this.training_mode) {
+        //     loader0.load(racetrackVizModel, (gltf) => {
+        //         const model = gltf.scene;
+        //         this.container.add(model);
+        //     });
+        // }
+        loader0.load(racetrackVizModel, (gltf) => {
+            const model = gltf.scene;
+            this.container.add(model);
+        });
 
         // Used for: Visual: False, Collision: False, Raycasting: False
         loader1.load(racetrackRaysModel, (gltf) => {
@@ -1039,12 +1045,14 @@ export default class Racetrack {
         });
 
         // Used for: Visual: True (base is visable, in prod we will have an empty file for base so its not visable), Collision: True, Raycasting: False
-        let base;
-        if (!this.training_mode) {
-            base = this.resources.items.racetrackEmpty.scene;
-        } else {
-            base = this.resources.items.racetrackPhysics.scene;
-        }
+        // let base;
+        // if (!this.training_mode) {
+        //     base = this.resources.items.racetrackEmpty.scene;
+        // } else {
+        //     base = this.resources.items.racetrackPhysics.scene;
+        // }
+        // Do to async we cant wait for the training_mode to be set so we will just use the empty file for now
+        let base = this.resources.items.racetrackEmpty.scene;
         this.objects.add({
             base: base,
             collision: this.resources.items.racetrackPhysics.scene,

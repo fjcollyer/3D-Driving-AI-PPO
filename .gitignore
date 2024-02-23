@@ -14,3 +14,6 @@ ui/dist/
 
 # Ignore specific directories
 ai/saved_ppo_tf_models/
+
+# Ignore directories starting with saved_ppo_tf_models
+ai/saved_ppo_tf_models*/

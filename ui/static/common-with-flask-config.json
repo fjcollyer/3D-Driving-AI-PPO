@@ -22,10 +22,10 @@
     },
     "state_space": 11,
     "action_space": 3,
-    "path_to_tfjs_actor_beginner": "/tfjs_models/actor_episodes_20",
-    "path_to_tfjs_critic_beginner": "/tfjs_models/critic_episodes_20",
-    "path_to_tfjs_actor_intermediate": "/tfjs_models/actor_episodes_80",
-    "path_to_tfjs_critic_intermediate": "/tfjs_models/critic_episodes_80",
-    "path_to_tfjs_actor_advanced": "/tfjs_models/actor_episodes_1161",
-    "path_to_tfjs_critic_advanced": "/tfjs_models/critic_episodes_1161"
+    "path_to_tfjs_actor_beginner": "/tfjs_models/actor_episodes_500",
+    "path_to_tfjs_critic_beginner": "/tfjs_models/critic_episodes_500",
+    "path_to_tfjs_actor_intermediate": "/tfjs_models/actor_episodes_800",
+    "path_to_tfjs_critic_intermediate": "/tfjs_models/critic_episodes_800",
+    "path_to_tfjs_actor_advanced": "/tfjs_models/actor_episodes_1300",
+    "path_to_tfjs_critic_advanced": "/tfjs_models/critic_episodes_1300"
 }

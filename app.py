@@ -1,6 +1,7 @@
 import json
 import subprocess
 import sys
+from datetime import datetime
 from ai.ppo.ppo import Agent
 import os
 from flask import Flask, request, jsonify
@@ -89,28 +90,45 @@ def plot_statistics():
     return avg_percentage
 
 
+def rename_existing_save_folder(folder_path):
+    """Renames the existing save folder to include a suffix with the current datetime."""
+    datetime_suffix = datetime.now().strftime("%Y%m%d_%H%M%S")
+    new_folder_name = f"{folder_path}_{datetime_suffix}"
+    os.rename(folder_path, new_folder_name)
+    print(f"Renamed existing save folder to: {new_folder_name}")
+
+
 #
 # Main entry point and logic
 #
 if __name__ == "__main__":
     try:
         print("Would you like to create a production build of the UI app? (y/n)")
-        should_create_production_build = input()
+        should_create_production_build = input().strip().lower()
         if should_create_production_build == "y":
             try:
                 create_production_build()
-                print()
-                print("Production build completed successfully to ./ui/dist")
+                print("\nProduction build completed successfully to ./ui/dist")
             except subprocess.CalledProcessError:
                 print("Error occurred during the production build process.")
                 sys.exit(1)
             sys.exit(0)
+
         print("Would you like to run the app in training mode? (y/n)")
-        training_mode = input() == "y"
+        training_mode = input().strip().lower() == "y"
+        saved_models_dir = "./ai/saved_ppo_tf_models"
+        if training_mode:
+            if os.path.exists(saved_models_dir):
+                print(
+                    f"The directory {saved_models_dir} already exists. Would you like to rename it with a datetime suffix? (y/n)")
+                rename_folder = input().strip().lower() == "y"
+                if rename_folder:
+                    rename_existing_save_folder(saved_models_dir)
+
         # Configuration variables
         config = {
-            "save_folder_actor": "./ai/saved_ppo_tf_models/actor",
-            "save_folder_critic": "./ai/saved_ppo_tf_models/critic",
+            "save_folder_actor": f"{saved_models_dir}/actor",
+            "save_folder_critic": f"{saved_models_dir}/critic",
         }
         update_config(training_mode)
         load_config()
