@@ -58,9 +58,9 @@ During training every 20 games the averege track completion percentage over the 
 ### 4. Stop training
 Simply ctrl+c will both stop the web app and exit the Flask app.
 
-### 5. How to prepare the newly trained model for use in the web app
+### 5. How to prepare the newly trained model to be used in the web app
 #### a. Identify the model you would like to prepare
-In "ai/saved_ppo_tf_models" the naming convention of the saved models is: {type}/{type}_episodes_{num_epidodes_completed}_avg_{avg_trach_completion_%}.
+In "ai/saved_ppo_tf_models" the naming convention of the saved models is: {type}/{type}\_episodes\_{num\_epidodes\_completed}\_avg\_{avg\_trach\_completion\_%}.
 
 #### b. Convert the model from Tensorflow format to Tensorflow.js format
 ```bash
