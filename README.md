@@ -23,8 +23,8 @@ This project utilizes Proximal Policy Optimization to develop a model capable of
    - [Prepare the Newly Trained Model](#5-how-to-prepare-the-newly-trained-model-to-be-used-in-the-web-app)
 3. [Running the Web App with Pre-trained Models](#running-the-web-app-with-pre-trained-models)
 4. [Building the Web App for Deployment](#building-the-web-app-for-deployment)
-
 <br>
+
 <span id="getting-started"></span>
 ## Getting started
 
