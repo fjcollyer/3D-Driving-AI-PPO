@@ -19,22 +19,19 @@ This project utilizes Proximal Policy Optimization to develop a model capable of
 
 ## Architecture and Integration
 
-This project is a complex integration of two main components: a 3D web application and a Python Flask application equipped with TensorFlow for model training.
+This project is an integration of two main components: a 3D web application and a Python Flask application equipped with TensorFlow for model training, utilizing Proximal Policy Optimization (PPO) techniques.
 
 ### Web Application
-The 3D web application, developed using Three.js, is the user interface that simulates a car driving on a racetrack. It operates in two modes:
+The 3D web application, developed using Three.js, presents a user interface where a car navigates a racetrack. It operates in two distinct modes:
 
-- **Training Mode:** In this mode, the web app makes approximately 4 API calls per second to the Flask API, sending data about the car's state. This includes its distance from the track edges in seven directions, calculated using raycasting. The API, in turn, responds with actions derived from the model.
-- **Normal Mode:** When not in training mode, the web app directly loads and runs pre-trained models using TensorFlow.js. This mode does not require interaction with the Flask app and runs entirely in the browser.
+- **Training Mode:** Here, the web app interacts dynamically with the Flask API, making around 4 API calls per second to send data about the car's current state. This data includes the car's distance from the track edges in seven directions, determined through raycasting. Based on this input, the Flask API responds with actions derived from the Proximal Policy Optimization (PPO) model. To enhance the speed of training, the web app is designed to support multiple active training sessions across different browser tabs. This feature was utilized during development, where four active tabs were opened simultaneously to expedite the training process.
+- **Normal Mode:** In this mode, the web app directly uses the models previously trained in Training Mode using TensorFlow.js. This allows for a seamless transition from training to implementation, showcasing the capabilities of the models without the need for real-time interaction with the Flask app.
 
 ### Python Flask TensorFlow App
-The backend, a Python Flask application, contains the logic for training the model using TensorFlow. It handles the incoming API calls from the web app, processes the state information, and determines the appropriate actions for the model. This app is also responsible for managing the training cycles, including when to take brief breaks for training on the collected data.
+The backend is powered by a Python Flask application, integrating TensorFlow to facilitate model training with Proximal Policy Optimization (PPO). It processes incoming API requests from the web application, interpreting the car's state to determine its next actions. This Flask application is pivotal in managing training sessions, including scheduling pauses for data processing and model improvement.
 
 ### Model Conversion and Integration
-The transition from TensorFlow to TensorFlow.js is facilitated by a script that converts models saved by the Flask app into a format compatible with TensorFlow.js. This enables the seamless running of models directly in the browser, bridging the gap between complex machine learning models and web-based applications.
-
-### Conclusion
-This architecture allows for a highly interactive and real-time experience in training and deploying machine learning models in a web environment. The combination of a 3D web app for simulation and a robust Flask backend for model training exemplifies the innovative integration of machine learning with web technologies.
+To transition models from TensorFlow to TensorFlow.js, a conversion script is employed. This script transforms models saved by the Flask application into a format compatible with TensorFlow.js, utilizing the conversion tool provided by TensorFlow.js, enabling their execution directly in the browser.
 
 ## Getting started
 
