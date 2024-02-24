@@ -9,7 +9,7 @@
 ## Description / Summary
 This project utilizes Proximal Policy Optimization to develop a model capable of controlling a car around a racetrack in a 3D web application. On the live site, you can observe the model in action and control the car yourself. You can also clone the repository to quickly start running the pre-trained model or begin training your own. This provides a straightforward way to dive into the project's main functionalities.
 
-## Table of Contents**
+## Table of Contents
 
 1. [Getting Started](#getting-started)
 2. [Running the Project in Training Mode](#running-the-project-in-training-mode)
