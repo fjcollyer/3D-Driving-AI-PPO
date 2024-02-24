@@ -26,6 +26,8 @@ This project utilizes Proximal Policy Optimization to develop a model capable of
 
 ## Getting started
 
+<span id="getting-started"></span>
+
 ### 1. Prerequisites
 
 - Python3 (3.11.7)
