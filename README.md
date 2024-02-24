@@ -1,7 +1,7 @@
 # Connect4 AI: Deep Q-Learning
 
 ## Website
-[https://connect4-ai-liard.vercel.app/](https://connect4-ai-liard.vercel.app/)
+[https://driving-ai.netlify.app/](https://driving-ai.netlify.app/)
 
 ## Preview
 ![Preview of project UI](preview.gif)
