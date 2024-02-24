@@ -2,15 +2,12 @@
 
 ## Website
 [https://driving-ai.netlify.app/](https://driving-ai.netlify.app/)
-<br>
 
 ## Preview
 ![Preview of project UI](preview.gif)
-<br>
 
 ## Description / Summary
 This project utilizes Proximal Policy Optimization to develop a model capable of controlling a car around a racetrack in a 3D web application. On the live site, you can observe the model in action and control the car yourself. You can also clone the repository to quickly start running the pre-trained model or begin training your own. This provides a straightforward way to dive into the project's main functionalities.
-<br>
 
 ## Table of Contents**
 
@@ -26,7 +23,6 @@ This project utilizes Proximal Policy Optimization to develop a model capable of
    - [Prepare the Newly Trained Model](#5-how-to-prepare-the-newly-trained-model-to-be-used-in-the-web-app)
 3. [Running the Web App with Pre-trained Models](#running-the-web-app-with-pre-trained-models)
 4. [Building the Web App for Deployment](#building-the-web-app-for-deployment)
-<br>
 
 <span id="getting-started"></span>
 ## Getting started
