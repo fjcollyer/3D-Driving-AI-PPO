@@ -25,7 +25,6 @@ This project utilizes Proximal Policy Optimization to develop a model capable of
 4. [Building the Web App for Deployment](#building-the-web-app-for-deployment)
 
 <span id="getting-started"></span>
-
 ## Getting started
 
 
