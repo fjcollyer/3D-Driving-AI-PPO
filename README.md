@@ -53,14 +53,14 @@ All the training logic is handled in the Flask app with Tensorflow.<br>
 To increase training speed simply run the web app on multiple active browser tabs. The API is designed to handle multiple instances of the web app making requests.<br>
 
 ### 3. Monitor performance
-During training every 20 games the averege track completion percentage over the past 20 games is plotted to "statistics.png" and the model is saved to "ai/saved_ppo_tf_models".
+During training every 20 games the average track completion percentage over the past 20 games is plotted to "statistics.png" and the model is saved to "ai/saved_ppo_tf_models".
 
 ### 4. Stop training
 Simply ctrl+c will both stop the web app and exit the Flask app.
 
 ### 5. How to prepare the newly trained model to be used in the web app
 #### a. Identify the model you would like to prepare
-In "ai/saved_ppo_tf_models" the naming convention of the saved models is: {type}/{type}\_episodes\_{num\_epidodes\_completed}\_avg\_{avg\_trach\_completion\_%}.
+In "ai/saved_ppo_tf_models" the naming convention of the saved models is: {type}/{type}\_episodes\_{num\_epidodes\_completed}\_avg\_{avg\_track\_completion\_%}.
 
 #### b. Convert the model from Tensorflow format to Tensorflow.js format
 ```bash
@@ -97,7 +97,7 @@ The web app uses the models specified in "ui/static/common-with-flask-config.jso
 
 ## Building the web app for deployment
 
-### Start "app.py"
+### 1. Start "app.py"
 ```bash
 python3 app.py
 ```
@@ -105,5 +105,5 @@ You will then be prompted:<br>
 "Would you like to create a production build of the UI app? (y/n)".<br>
 Enter "y".
 
-### Thats it
+### 2. Thats it
 You can upload "ui/dist/" to a hosting service.
