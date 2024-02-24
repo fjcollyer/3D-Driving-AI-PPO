@@ -33,6 +33,12 @@ The backend is powered by a Python Flask application, integrating TensorFlow to 
 ### Model Conversion and Integration
 To transition models from TensorFlow to TensorFlow.js, a conversion script is employed. This script transforms models saved by the Flask application into a format compatible with TensorFlow.js, utilizing the conversion tool provided by TensorFlow.js, enabling their execution directly in the browser.
 
+### Model Performance Progression
+
+Over the course of 4500 episodes, the model's performance was tracked and plotted to illustrate progress. The plot, displayed below, shows the average track completion percentage after every 20 episodes. Each point on the plot represents the average completion rate for a set of 20 episodes, plotted against the episode number at which the training occurred. The model's performance stabilized at a 99% track completion rate, showcasing the effectiveness of the training process.
+
+![Model Performance Progression](ai/plot_model_perf.png)
+
 ## Getting started
 
 ### 1. Prerequisites
