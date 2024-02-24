@@ -56,7 +56,7 @@ To increase training speed simply run the web app on multiple active browser tab
 During training every 20 games the average track completion percentage over the past 20 games is plotted to "statistics.png" and the model is saved to "ai/saved_ppo_tf_models".
 
 ### 4. Stop training
-Simply ctrl+c will both stop the web app and exit the Flask app.
+Press Ctrl+C. The application is set to gracefully shut down.
 
 ### 5. How to prepare the newly trained model to be used in the web app
 #### a. Identify the model you would like to prepare
@@ -76,7 +76,7 @@ You will then be prompted:<br>
 Enter "y".
 
 #### c. Update the web app config
-In "ui/static/common-with-flask-config.json" change the number to your models {num_epidodes_completed} in the "path_to_tfjs_actor" and "path_to_tfjs_critic" fields.
+In "ui/static/common-with-flask-config.json" change the number to your models {num_episodes_completed} in the "path_to_tfjs_actor" and "path_to_tfjs_critic" fields.
 
 ## Running the web app with pre-trained models
 
