@@ -48,7 +48,9 @@ npm i &&
 cd .. &&
 pip3 install -r requirements.txt
 ```
+<br>
 
+<span id="running-the-project-in-training-mode"></span>
 ## Running the project in training mode
 
 ### 1. Start "app.py"
@@ -94,7 +96,9 @@ Enter "y".
 
 #### c. Update the web app config
 In "ui/static/common-with-flask-config.json" change the number to your models {num_episodes_completed} in the "path_to_tfjs_actor" and "path_to_tfjs_critic" fields.
+<br>
 
+<span id="running-the-web-app-with-pre-trained-models"></span>
 ## Running the web app with pre-trained models
 
 ### 1. Start "app.py"
@@ -111,7 +115,9 @@ Enter "n" to start the web app using the pre-trained models.
 
 ### 2. That's it
 The web app uses the models specified in "ui/static/common-with-flask-config.json" for the beginner, intermediate and advanced modes.
+<br>
 
+<span id="building-the-web-app-for-deployment"></span>
 ## Building the web app for deployment
 
 ### 1. Start "app.py"
