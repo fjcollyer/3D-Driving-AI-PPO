@@ -11,7 +11,7 @@ This project utilizes Proximal Policy Optimization to develop a model capable of
 
 ## Table of Contents
 
-1. [Architecture and Interation](#aarchitecture-and-integration) 
+1. [Architecture and Interation](#architecture-and-integration) 
 2. [Getting Started](#getting-started)
 3. [Running the Project in Training Mode](#running-the-project-in-training-mode)
 4. [Running the Web App with Pre-trained Models](#running-the-web-app-with-pre-trained-models)
