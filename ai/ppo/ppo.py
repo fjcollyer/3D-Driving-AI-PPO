@@ -10,7 +10,7 @@ from .ppo_critic import CriticNetwork
 
 
 class Agent:
-    def __init__(self, n_actions, input_dims, save_folder_actor, save_folder_critic, gamma=0.99, alpha=0.0003, gae_lambda=0.95, policy_clip=0.2, batch_size=64, n_epochs=10, entropy_coeff=0.02):
+    def __init__(self, n_actions, input_dims, save_folder_actor, save_folder_critic, gamma=0.99, alpha=0.0003, gae_lambda=0.95, policy_clip=0.2, batch_size=64, n_epochs=10, entropy_coeff=0.1):
         self.gamma = gamma
         self.policy_clip = policy_clip
         self.n_epochs = n_epochs
@@ -24,6 +24,8 @@ class Agent:
 
         self.save_folder_actor = save_folder_actor
         self.save_folder_critic = save_folder_critic
+
+        self.prev_average_track_completion = 0
 
     def remember(self, state, action, probs, vals, reward, done):
         self.memory.store_memory(state, action, probs, vals, reward, done)
@@ -102,6 +104,11 @@ class Agent:
                 self.critic.optimizer.apply_gradients(
                     zip(grad_c, self.critic.trainable_variables))
 
+            # Call adjust_entropy_coeff at the end of the learn method
+            self.adjust_entropy_coeff(
+                average_track_completion, self.prev_average_track_completion)
+            self.prev_average_track_completion = average_track_completion
+            print("Entropy Coeff: ", self.entropy_coeff)
             # Clear memory and save models
             self.memory.clear_memory()
             self.save_models(total_completed_games, average_track_completion)
@@ -116,6 +123,13 @@ class Agent:
         last_percent_completed = last_state[0] * 100
         difference = percent_completed - last_percent_completed
         return difference
+
+    def adjust_entropy_coeff(self, average_track_completion, prev_average_track_completion):
+        pass
+        # if average_track_completion < prev_average_track_completion:
+        #     self.entropy_coeff *= 1.05
+        # else:
+        #     self.entropy_coeff *= 0.95
 
     def save_models(self, episode_number, average_track_completion):
         print('... saving models ...')

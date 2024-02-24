@@ -257,7 +257,7 @@ if __name__ == "__main__":
                         data["paused"] = False
                     is_training = False
 
-                    print("Training ended, did_train:", did_train)
+                    print("did_train:", did_train)
                     return jsonify({"unpause": True})
 
                 if agent_id in agent_data and not agent_data[agent_id]["paused"]:
