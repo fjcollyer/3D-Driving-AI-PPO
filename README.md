@@ -56,7 +56,7 @@ To increase training speed simply run the web app on multiple active browser tab
 During training every 20 games the average track completion percentage over the past 20 games is plotted to "statistics.png" and the model is saved to "ai/saved_ppo_tf_models".
 
 ### 4. Stop training
-Press Ctrl+C. The application is set to gracefully shut down.
+Press Ctrl+C in the terminal where the app is running. The application is set to gracefully shut down.
 
 ### 5. How to prepare the newly trained model to be used in the web app
 #### a. Identify the model you would like to prepare
