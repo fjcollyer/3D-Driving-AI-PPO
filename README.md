@@ -29,7 +29,7 @@ cd 3D-Driving-AI-PPO
 cd ui &&
 npm i &&
 cd .. &&
-pip3 install -r requirements.txt &&
+pip3 install -r requirements.txt
 ```
 
 ## Running the project in training mode
@@ -60,7 +60,7 @@ Simply ctrl+c will both stop the web app and exit the Flask app.
 
 ### 5. How to prepare the newly trained model to be used in the web app
 #### a. Identify the model you would like to prepare
-In "ai/saved_ppo_tf_models" the naming convention of the saved models is: {type}/{type}\_episodes\_{num\_epidodes\_completed}\_avg\_{avg\_track\_completion\_%}.
+In "ai/saved_ppo_tf_models" the naming convention of the saved models is: {type}/{type}\_episodes\_{num\_episodes\_completed}\_avg\_{avg\_track\_completion\_%}.
 
 #### b. Convert the model from Tensorflow format to Tensorflow.js format
 ```bash
@@ -92,7 +92,7 @@ You will then be prompted:<br>
 "Would you like to run the app in training mode? (y/n)".<br>
 Enter "n" to start the web app using the pre-trained models.
 
-### 2. Thats it
+### 2. That's it
 The web app uses the models specified in "ui/static/common-with-flask-config.json" for the beginner, intermediate and advanced modes.
 
 ## Building the web app for deployment
@@ -105,5 +105,5 @@ You will then be prompted:<br>
 "Would you like to create a production build of the UI app? (y/n)".<br>
 Enter "y".
 
-### 2. Thats it
+### 2. That's it
 You can upload "ui/dist/" to a hosting service.
