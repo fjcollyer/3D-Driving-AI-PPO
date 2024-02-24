@@ -12,15 +12,7 @@ This project utilizes Proximal Policy Optimization to develop a model capable of
 ## Table of Contents**
 
 1. [Getting Started](#getting-started)
-   - [Prerequisites](#1-prerequisites)
-   - [Clone the Repository](#2-clone-the-repository)
-   - [Install Dependencies](#3-install-dependencies)
 2. [Running the Project in Training Mode](#running-the-project-in-training-mode)
-   - [Start "app.py"](#1-start-apppy)
-   - [Start Training](#2-start-training)
-   - [Monitor Performance](#3-monitor-performance)
-   - [Stop Training](#4-stop-training)
-   - [Prepare the Newly Trained Model](#5-how-to-prepare-the-newly-trained-model-to-be-used-in-the-web-app)
 3. [Running the Web App with Pre-trained Models](#running-the-web-app-with-pre-trained-models)
 4. [Building the Web App for Deployment](#building-the-web-app-for-deployment)
 
