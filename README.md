@@ -38,41 +38,41 @@ pip3 install -r requirements.txt &&
 ```bash
 python3 app.py
 ```
-
-You will then be prompted:
-"Would you like to create a production build of the UI app? (y/n)"
-Enter "n" to continue.
-
-You will then be prompted:
-"Would you like to run the app in training mode? (y/n)"
+You will then be prompted:<br>
+"Would you like to create a production build of the UI app? (y/n)".<br> 
+Enter "n" to continue.<br>
+<br>
+You will then be prompted:<br>
+"Would you like to run the app in training mode? (y/n)".<br>
 Enter "y" to start the web app in training mode and run the Flask API where the model is trained.
 
 ### 2. Start training
-To start training open the web app and press the "START" button. The web app will call the Flask API passing the state and the API will respond with the models actions. All the training logic is handled in the Flask app with Tensorflow.
-
-To increase training speed simply run the web app on multiple active browser tabs. The API is designed to handle multiple instances of the web app making requests.
+To start training open the web app and press the "START" button. The web app will call the Flask API passing the state and the API will respond with the models actions.<br>
+All the training logic is handled in the Flask app with Tensorflow.<br>
+<br>
+To increase training speed simply run the web app on multiple active browser tabs. The API is designed to handle multiple instances of the web app making requests.<br>
 
 ### 3. Monitor performance
 During training every 20 games the averege track completion percentage over the past 20 games is plotted to "statistics.png" and the model is saved to "ai/saved_ppo_tf_models".
 
-### 4. Stopping training
+### 4. Stop training
 Simply ctrl+c will both stop the web app and exit the Flask app.
 
 ### 5. How to prepare the newly trained model for use in the web app
 #### a. Identify the model you would like to prepare
-In "ai/saved_ppo_tf_models" the naming convention of the saved models is: {type}/{type}_episodes_{num_epidodes_completed}_avg_{avg_trach_completion_%}
+In "ai/saved_ppo_tf_models" the naming convention of the saved models is: {type}/{type}_episodes_{num_epidodes_completed}_avg_{avg_trach_completion_%}.
 
 #### b. Convert the model from Tensorflow format to Tensorflow.js format
 ```bash
 python3 convert_tf_to_tfjs.py
 ```
 
-You will then be prompted:
-"Enter the episode number of the models you are targeting:"
-Enter the number {num_episodes_completed} that you identified at the last step. 
-
-You will then be prompted:
-"Would you like to save the converted models to './ui/static/tfjs_models' as well? (y/n):"
+You will then be prompted:<br>
+"Enter the episode number of the models you are targeting:".<br>
+Enter the number {num_episodes_completed} that you identified at the last step.<br>
+<br>
+You will then be prompted:<br>
+"Would you like to save the converted models to './ui/static/tfjs_models' as well? (y/n):".<br>
 Enter "y".
 
 #### c. Update the web app config
@@ -84,12 +84,12 @@ In "ui/static/common-with-flask-config.json" change the number to your models {n
 ```bash
 python3 app.py
 ```
-You will then be prompted:
-"Would you like to create a production build of the UI app? (y/n)"
-Enter "n" to continue.
-
-You will then be prompted:
-"Would you like to run the app in training mode? (y/n)"
+You will then be prompted:<br>
+"Would you like to create a production build of the UI app? (y/n)".<br>
+Enter "n" to continue.<br>
+<br>
+You will then be prompted:<br>
+"Would you like to run the app in training mode? (y/n)".<br>
 Enter "n" to start the web app using the pre-trained models.
 
 ### 2. Thats it
@@ -101,8 +101,8 @@ The web app uses the models specified in "ui/static/common-with-flask-config.jso
 ```bash
 python3 app.py
 ```
-You will then be prompted:
-"Would you like to create a production build of the UI app? (y/n)"
+You will then be prompted:<br>
+"Would you like to create a production build of the UI app? (y/n)".<br>
 Enter "y".
 
 ### Thats it
