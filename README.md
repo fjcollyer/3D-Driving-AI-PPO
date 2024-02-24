@@ -16,7 +16,6 @@ This project utilizes Proximal Policy Optimization to develop a model capable of
 3. [Running the Web App with Pre-trained Models](#running-the-web-app-with-pre-trained-models)
 4. [Building the Web App for Deployment](#building-the-web-app-for-deployment)
 
-<span id="getting-started"></span>
 ## Getting started
 
 ### 1. Prerequisites
@@ -41,7 +40,6 @@ pip3 install -r requirements.txt
 ```
 <br>
 
-<span id="running-the-project-in-training-mode"></span>
 ## Running the project in training mode
 
 ### 1. Start "app.py"
@@ -90,7 +88,6 @@ In "ui/static/common-with-flask-config.json" change the number to your models {n
 <br>
 <br>
 
-<span id="running-the-web-app-with-pre-trained-models"></span>
 ## Running the web app with pre-trained models
 
 ### 1. Start "app.py"
@@ -110,7 +107,6 @@ The web app uses the models specified in "ui/static/common-with-flask-config.jso
 <br>
 <br>
 
-<span id="building-the-web-app-for-deployment"></span>
 ## Building the web app for deployment
 
 ### 1. Start "app.py"
