@@ -24,7 +24,7 @@ This project is a complex integration of two main components: a 3D web applicati
 ### Web Application
 The 3D web application, developed using Three.js, is the user interface that simulates a car driving on a racetrack. It operates in two modes:
 
-- **Training Mode:** In this mode, the web app makes approximately 4 API calls per second to the Flask API, sending data about the car's state, including its distance from the track edges in seven directions. This state is calculated using raycasting or similar mathematical techniques. The API, in turn, responds with actions derived from the model.
+- **Training Mode:** In this mode, the web app makes approximately 4 API calls per second to the Flask API, sending data about the car's state. This includes its distance from the track edges in seven directions, calculated using raycasting. The API, in turn, responds with actions derived from the model.
 - **Normal Mode:** When not in training mode, the web app directly loads and runs pre-trained models using TensorFlow.js. This mode does not require interaction with the Flask app and runs entirely in the browser.
 
 ### Python Flask TensorFlow App
