@@ -9,7 +9,7 @@
 ## Description / Summary
 This project utilizes Proximal Policy Optimization to develop a model capable of controlling a car around a racetrack in a 3D web application. On the live site, you can observe the model in action and control the car yourself. You can also clone the repository to quickly start running the pre-trained model or begin training your own. This provides a straightforward way to dive into the project's main functionalities.
 
-## Running the Project Locally
+## Getting started
 
 ### 1. Prerequisites
 
@@ -20,41 +20,90 @@ This project utilizes Proximal Policy Optimization to develop a model capable of
 
 ### 2. Clone the Repository
 ```bash
-git clone https://github.com/fjcollyer/Connect4-AI-Deep-Q-Learning.git &&
-cd Connect4-AI-Deep-Q-Learning
+git clone https://github.com/fjcollyer/3D-Driving-AI-PPO.git &&
+cd 3D-Driving-AI-PPO
 ```
 
-### 3. Run the API that serves the Deep Q-Learning Model
-```bash
-cd api &&
-pip3 install -r requirements.txt &&
-python3 app.py
-```
-
-### 4. Run the UI
+### 3. Install dependencies
 ```bash
 cd ui &&
 npm i &&
-npm run dev
+cd .. &&
+pip3 install -r requirements.txt &&
 ```
 
-### 5. Note
-By default the API will run on http://127.0.0.1:8080. If it runs on a different port you must update the code in "ui/src/Game.js" to use the correct URL.
+## Running the project in training mode
 
-## Training the model
-
-### 1. Set hyperparameters and parameters
-In "api/train/main.py" there is a Config class that contains most of the important hyperparameters and parameters.
-
-### 2. Run the training script
+### 1. Start "app.py"
 ```bash
-cd api &&
-python3 -m train.main
+python3 app.py
 ```
-This will generate "api/agents/" where the model is periodically saved to.
 
-### 3. Run final evaluation of the model
+You will then be prompted:
+"Would you like to create a production build of the UI app? (y/n)"
+Enter "n" to continue.
+
+You will then be prompted:
+"Would you like to run the app in training mode? (y/n)"
+Enter "y" to start the web app in training mode and run the Flask API where the model is trained.
+
+### 2. Start training
+To start training open the web app and press the "START" button. The web app will call the Flask API passing the state and the API will respond with the models actions. All the training logic is handled in the Flask app with Tensorflow.
+
+To increase training speed simply run the web app on multiple active browser tabs. The API is designed to handle multiple instances of the web app making requests.
+
+### 3. Monitor performance
+During training every 20 games the averege track completion percentage over the past 20 games is plotted to "statistics.png" and the model is saved to "ai/saved_ppo_tf_models".
+
+### 4. Stopping training
+Simply ctrl+c will both stop the web app and exit the Flask app.
+
+### 5. How to prepare the newly trained model for use in the web app
+#### a. Identify the model you would like to prepare
+In "ai/saved_ppo_tf_models" the naming convention of the saved models is: {type}/{type}_episodes_{num_epidodes_completed}_avg_{avg_trach_completion_%}
+
+#### b. Convert the model from Tensorflow format to Tensorflow.js format
 ```bash
-python3 -m train.sim_vs_random
+python3 convert_tf_to_tfjs.py
 ```
-This plays the saved models from 'api/agents/' against an opponent that makes random moves. When done it will plot the performance of the different iterations of the model and save it to '2024learning_progression.png'.
+
+You will then be prompted:
+"Enter the episode number of the models you are targeting:"
+Enter the number {num_episodes_completed} that you identified at the last step. 
+
+You will then be prompted:
+"Would you like to save the converted models to './ui/static/tfjs_models' as well? (y/n):"
+Enter "y".
+
+#### c. Update the web app config
+In "ui/static/common-with-flask-config.json" change the number to your models {num_epidodes_completed} in the "path_to_tfjs_actor" and "path_to_tfjs_critic" fields.
+
+## Running the web app with pre-trained models
+
+### 1. Start "app.py"
+```bash
+python3 app.py
+```
+You will then be prompted:
+"Would you like to create a production build of the UI app? (y/n)"
+Enter "n" to continue.
+
+You will then be prompted:
+"Would you like to run the app in training mode? (y/n)"
+Enter "n" to start the web app using the pre-trained models.
+
+### 2. Thats it
+The web app uses the models specified in "ui/static/common-with-flask-config.json" for the beginner, intermediate and advanced modes.
+
+## Building the web app for deployment
+
+### Start "app.py"
+```bash
+python3 app.py
+```
+You will then be prompted:
+"Would you like to create a production build of the UI app? (y/n)"
+Enter "y".
+
+### Thats it
+You can upload "ui/dist/" to a hosting service.
