@@ -269,14 +269,14 @@ export default class {
                 // Remove the background
                 setTimeout(() => {
                     document.body.removeChild(backgroundDiv);
-                }, 500);
-            }, 500); // Match this with the fade-out duration.
+                }, 700);
+            }, 700); // Match this with the fade-out duration.
 
             // Start the game
             setTimeout(() => {
                 this.start();
                 this.reveal.go();
-            }, 100);
+            }, 0);
         });
 
     }

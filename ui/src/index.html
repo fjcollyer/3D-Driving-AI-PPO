@@ -3,45 +3,38 @@
 
 <head>
     <meta charset="UTF-8">
-
-    <title>3d Driving AI</title>
-    <!-- <meta name="description"
-        content="Creative developer living in Paris, freelancer, former lead developer at Immersive Garden, former developer at Uzik and teacher." /> -->
-
-    <!-- <meta itemprop=name content="Bruno Simon - Creative developer">
-    <meta itemprop="description"
-        content="Creative developer living in Paris, freelancer, former lead developer at Immersive Garden, former developer at Uzik and teacher.">
-    <meta itemprop="image" content=https://bruno-simon.com/social/share-1200x630.png> -->
-
-    <!-- <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="Bruno Simon - Creative developer">
-    <meta name="twitter:description"
-        content="Creative developer living in Paris, freelancer, former lead developer at Immersive Garden, former developer at Uzik and teacher.">
-    <meta name="twitter:image" content="https://bruno-simon.com/social/share-1200x600.png"> -->
-
-    <!-- <meta property="og:site_name" content="Bruno Simon - Creative developer">
-    <meta property="og:type" content="website">
-    <meta property="og:url" content="https://bruno-simon.com">
-    <meta property="og:title" content="Bruno Simon - Creative developer">
-    <meta property="og:description"
-        content="Creative developer living in Paris, freelancer, former lead developer at Immersive Garden, former developer at Uzik and teacher.">
-    <meta property="og:image" content="https://bruno-simon.com/social/share-1200x630.png"> -->
-
+    <title>3D Driving AI</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description"
+        content="3D web app, built using Three.js, showcases a car navigated by AI models trained with Proximal Policy Optimization techniques.">
 
-    <!-- <link rel="apple-touch-icon" sizes="180x180" href="/favicon/apple-touch-icon.png">
-    <link rel="manifest" href="/favicon/site.webmanifest">
-    <link rel="mask-icon" href="/favicon/safari-pinned-tab.svg" color="#ff8908"> -->
-    <!-- <meta name="apple-mobile-web-app-title" content="Bruno Simon">
-    <meta name="application-name" content="Bruno Simon"> -->
-    <!-- <meta name="msapplication-TileColor" content="#da532c">
-    <meta name="theme-color" content="#ffffff"> -->
-
-    <!-- FJC -->
+    <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="/cybertruck.svg">
+    <link rel="alternate icon" type="image/svg+xml" href="/cybertruck-white.svg">
 
-    <!--=============== REMIXICONS ===============-->
+    <!-- Remix Icons -->
     <link href="https://cdn.jsdelivr.net/npm/remixicon@2.5.0/fonts/remixicon.css" rel="stylesheet">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://3d-driving-ai.vercel.app/">
+    <meta property="og:title" content="3D Driving AI">
+    <meta property="og:description"
+        content="3D web app, built using Three.js, showcases a car navigated by AI models trained with Proximal Policy Optimization techniques.">
+    <meta property="og:image" content="https://3d-driving-ai.vercel.app/preview.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="600">
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:url" content="https://3d-driving-ai.vercel.app/">
+    <meta name="twitter:title" content="3D Driving AI">
+    <meta name="twitter:description"
+        content="3D web app, built using Three.js, showcases a car navigated by AI models trained with Proximal Policy Optimization techniques.">
+    <meta name="twitter:image" content="https://3d-driving-ai.vercel.app/preview.png">
 </head>
 
 <body>
@@ -186,19 +179,43 @@
                             <div class="dropdown__content">
                                 <div class="info-container">
                                     <div class="info-left">
-                                        <div class="info-title">
-                                            <h2 class="created-by-text">Created By</h2>
+                                        <div class="project-info-container">
+                                            <div class="info-title">
+                                                <h1 class="info-title-text">Project Overview</h1>
+                                            </div>
+                                            <p>
+                                                This 3D web app, built using Three.js, showcases a car navigated by AI
+                                                models trained with Proximal Policy Optimization techniques. The models
+                                                are deployed directly in the browser through TensorFlow.js, facilitating
+                                                real-time interactions and allowing for immediate inference responses.
+                                                <br><br>
+                                                A plot displaying the model's performance over 4500 training episodes
+                                                provides a visual representation of the training's efficacy. For
+                                                comprehensive details on the training process and more, visit the <a
+                                                    href="https://github.com/fjcollyer/3D-Driving-AI-PPO"
+                                                    target="_blank">GitHub README</a>.
+                                            </p>
+                                        </div>
+                                        <div class="created-by-container">
+                                            <p class="created-by-text">Created by</p>
                                             <h1 class="my-name-text">Fredrik Collyer</h1>
+                                            <div class="social-links">
+                                                <!-- <a href="https://www.instagram.com/fjcollyer/" target="_blank"><i class="fab fa-instagram"></i></a> -->
+                                                <a href="https://twitter.com/fjcollyer" target="_blank"><i
+                                                        class="fab fa-twitter"></i></a>
+                                                <a href="https://github.com/fjcollyer" target="_blank"><i
+                                                        class="fab fa-github"></i></a>
+                                                <a href="https://www.linkedin.com/in/fjcollyer/" target="_blank"><i
+                                                        class="fab fa-linkedin-in"></i></a>
+                                            </div>
                                         </div>
                                     </div>
                                     <div class="info-right">
-                                        <div class="info-title">
-                                            <h1 class="info-title-text">This is info</h1>
-                                        </div>
+                                        <img src="/plot_model_perf.png" alt="Model Performance Progression">
                                     </div>
                                 </div>
                             </div>
-                        </div>
+
                     </li>
                     <li class="timer-progress-container-li">
                         <div class="timer-progress-container">
