@@ -12,7 +12,7 @@ ui/package-lock.json
 # Distribution files
 ui/dist/
 
-# Ignore specific directories
+# Ignore specific directories 
 ai/saved_ppo_tf_models/
 
 # Ignore directories starting with saved_ppo_tf_models 
