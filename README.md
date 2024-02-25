@@ -28,7 +28,7 @@ The 3D web application, developed using Three.js, presents a user interface wher
 - **Normal Mode:** In this mode, the web app directly uses the models previously trained in Training Mode using TensorFlow.js. This allows for a seamless transition from training to implementation, showcasing the capabilities of the models without the need for real-time interaction with the Flask app.
 
 ### Python Flask TensorFlow App
-The backend is powered by a Python Flask application, integrating TensorFlow to facilitate model training with Proximal Policy Optimization (PPO). It processes incoming API requests from the web application, interpreting the car's state to determine its next actions. This Flask application is pivotal in managing training sessions, including scheduling pauses for data processing and model improvement.
+The backend is powered by a Python Flask application, integrating TensorFlow to facilitate model training with Proximal Policy Optimization (PPO). It processes incoming API requests from the web application, interpreting the car's state to determine its next actions. This Flask application is pivotal in managing training sessions, including scheduling pauses for data processing and model improvement. 
 
 ### Model Conversion and Integration
 To transition models from TensorFlow to TensorFlow.js, a conversion script is employed. This script transforms models saved by the Flask application into a format compatible with TensorFlow.js, utilizing the conversion tool provided by TensorFlow.js, enabling their execution directly in the browser.
