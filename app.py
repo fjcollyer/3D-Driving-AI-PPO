@@ -39,7 +39,7 @@ def start_ui_app():
 
 
 def create_production_build():
-    # Set training mode to false
+    # Set training mode false
     update_config(False)
 
     # Proceed with creating the production build
