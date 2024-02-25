@@ -63,8 +63,8 @@ def convert_to_tfjs(model_type, episode_number, output_dirs):
 
     Args:
     model_type (str): Type of the model ('actor' or 'critic').
-    episode_number (int): Episode number of the model.
-    output_dirs (list): Directories where the TensorFlow.js model will be saved.
+    episode_number (int): Episode number of the model. 
+    output_dirs (list): Directories where the TensorFlow.js model will be saved. 
     """
     saved_model_dir = find_model_path(model_type, episode_number)
 
