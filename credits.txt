@@ -1,0 +1,2 @@
+Car (model, controls, physics, sound) from forking and stripping Bruno Simons portfolio:
+https://github.com/brunosimon/folio-2019 
