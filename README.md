@@ -1,7 +1,7 @@
 # 3D Driving AI: Proximal Policy Optimization
 
 ## Website
-[https://driving-ai.netlify.app/](https://driving-ai.netlify.app/)
+[https://3d-driving-ai.vercel.app/](https://3d-driving-ai.vercel.app/)
 
 ## Preview
 ![Preview of project UI](preview.gif)
