@@ -44,6 +44,10 @@ class PPOAgent {
     // Log the path to the model
     // console.log("path_to_tfjs_actor: " + this.path_to_tfjs_actor);
 
+    // Log action and action probabilities
+    console.log("action: " + action);
+    console.log("actionProbabilities: " + actionProbabilities);
+
     return { action, actionProbabilities, value: valueData[0] };
   }
 
